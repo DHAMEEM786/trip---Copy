@@ -24,34 +24,65 @@ export default async function handler(req, res) {
 
         const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: "GEMINI_API_KEY missing in server environment." });
+            return res.status(500).json({ error: "API Key missing. Add GEMINI_API_KEY to your Vercel/Environment variables." });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Attempt models in order of priority for free tier stability
-        const models = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"];
-        let lastError = null;
+        // Expanded model list for maximum resilience
+        const modelsToTry = [
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-flash-8b",
+            "gemini-2.0-flash-exp",
+            "gemini-pro"
+        ];
 
-        for (const modelName of models) {
+        let lastError = null;
+        let attemptedModels = [];
+
+        for (const modelName of modelsToTry) {
             try {
+                attemptedModels.push(modelName);
                 const model = genAI.getGenerativeModel({ model: modelName });
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
-                return res.status(200).json({ text: response.text() });
+                return res.status(200).json({
+                    text: response.text(),
+                    model: modelName
+                });
             } catch (e) {
                 lastError = e;
-                if (e.status === 404) continue; // Try next if not found
-                break; // Stop if it's a quota or other error
+                console.warn(`Model ${modelName} failed:`, e.message);
+
+                // If it's a 429 (Quota), it might be specific to the model or global.
+                // If it's a 404 (Not Found), definitely try the next one.
+                if (e.status === 404) continue;
+                if (e.status === 429) {
+                    // If 429, we still try others because some models have different quotas
+                    continue;
+                }
+                // For other errors, we might want to stop, but for now let's try all.
             }
         }
 
-        throw lastError;
+        // If we get here, all models failed
+        const isQuotaError = lastError?.status === 429 || lastError?.message?.includes("quota");
+
+        return res.status(lastError?.status || 500).json({
+            error: lastError?.message || "All models failed",
+            diagnostic: {
+                attempted: attemptedModels,
+                lastFailure: lastError?.message,
+                isQuotaIssue: isQuotaError
+            },
+            suggestion: isQuotaError
+                ? "Your API key has hit its daily limit. Please check https://aistudio.google.com/app/plan_and_billing or try a different key."
+                : "Verify your API key is correct and assigned to a project with 'Generative Language API' enabled."
+        });
 
     } catch (err) {
         console.error("Gemini Failure:", err);
-        return res.status(err.status || 500).json({
-            error: err.message || "Internal Server Error",
-        });
+        return res.status(500).json({ error: err.message });
     }
 }
