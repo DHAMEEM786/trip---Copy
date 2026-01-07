@@ -88,7 +88,9 @@
     <audio id="arjuna_ratha-audio" src="audio/arjuna_ratha.mp3" preload="auto"></audio>
     <audio id="nakula_ratha-audio" src="audio/nakula_ratha.mp3" preload="auto"></audio>
 
-
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=geometry&callback=initPanorama"
+        async defer></script>
 
     <script>
         let panorama = null;
@@ -320,9 +322,6 @@
             else document.exitFullscreen();
         });
     </script>
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=%GOOGLE_MAPS_API_KEY%&libraries=geometry&callback=initPanorama"
-        async defer></script>
 </body>
 
 </html>
