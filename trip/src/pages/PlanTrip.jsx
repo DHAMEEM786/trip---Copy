@@ -36,7 +36,7 @@ const PlanTrip = () => {
 
     const sendToGemini = async (prompt, weatherInfo = "") => {
         try {
-            const res = await fetch("http://localhost:5000/api/gemini", {
+            const res = await fetch("/api/gemini", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt })
