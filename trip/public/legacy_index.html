@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Travel & Tourism + Instagram Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./tn verse/style.css">
+</head>
+
+<body style="background: url('./tn verse/src/temple.png') no-repeat center/cover fixed;">
+    <!-- Navbar -->
+    <header class="navbar" id="siteNavbar">
+        <div class="nav-inner">
+            <ul class="nav-menu">
+                <li><a class="nav-link" href="#"><i class="fa-solid fa-house"></i>Home</a></li>
+                <li><a class="nav-link" href="./ai api/index.html"><i class="fa-solid fa-route"></i>Plan Trip</a></li>
+                <li><a class="nav-link" href="#Experience"><i class="fa-solid fa-compass"></i>Experience</a></li>
+                <li><a class="nav-link" href="#"><i class="fa-solid fa-map-marker-alt"></i>Where to Go</a></li>
+            </ul>
+            <button id="hamburgerBtn" class="hamburger" aria-expanded="false">
+                <span class="bar"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Slide-in panel -->
+    <nav id="navPanel" class="panel" aria-hidden="true"></nav>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div id="hero-content">
+            <img src="./tn verse/src/tropical_logo.png" alt="TN Verse Logo" class="circle-logo">
+            <h1>Tamil Nadu Tourism-Where Stories Come Alive</h1>
+            <p>Immersive Travel Experience at Your Fingertips</p>
+            <div class="hero-buttons">
+                <button class="btn-vr" onclick="window.location.href='../VR/index.html'">
+                    <i class="fa-solid fa-vr-cardboard"></i> VR
+                </button>
+
+                <button class="btn-ar" onclick="window.location.href='../AR/index.html'">
+                    <i class="fa-solid fa-cube"></i> AR
+                </button>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Tamil Nadu Wonders Section -->
+    <section id="tn-wonders">
+        <div class="tn-header">
+            <h2>Tamil Nadu's Timeless Treasures</h2>
+            <p>Experience the rich heritage and vibrant culture of the Land of Temples</p>
+        </div>
+        <div class="tn-cards-container">
+            <!-- Card 1 -->
+            <div class="tn-card" onclick="window.location.href='./tn verse/culinary.html'" style="cursor: pointer;">
+                <img src="./tn verse/src/memories-cuisine.png" alt="Culinary Tourism">
+                <div class="tn-card-content">
+                    <h3>Culinary Tourism</h3>
+                    <p>Savor the authentic flavors of Tamil Nadu, from spicy Chettinad curries to traditional vegetarian
+                        feasts served on banana leaves.</p>
+                </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="tn-card">
+                <img src="./tn verse/src/agri.png" alt="Agri & Rural Tourism">
+                <div class="tn-card-content">
+                    <h3>Agri & Rural Tourism</h3>
+                    <p>Experience the rustic charm of village life, walk through lush paddy fields, and understand the
+                        roots of Tamil culture.</p>
+                </div>
+            </div>
+            <!-- Card 3 -->
+            <div class="tn-card">
+                <img src="./tn verse/src/medical.png" alt="Wellness & Medical Tourism">
+                <div class="tn-card-content">
+                    <h3>Wellness & Medical Tourism</h3>
+                    <p>Rejuvenate your mind and body with world-class healthcare, traditional Siddha medicine, and
+                        peaceful yoga retreats.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Custom JS -->
+    <script src="./tn verse/script.js"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=places&callback=initMap"></script>
+
+</body>
+
+</html>

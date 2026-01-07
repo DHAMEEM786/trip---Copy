@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marutham - Agri & Rural Tourism of Tamil Nadu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="agri.css">
+</head>
+
+<body>
+
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Marutham</h1>
+        <p>Return to the Roots. Experience the Soul of Tamil Nadu.</p>
+        <a href="#concept" class="cta-btn">Explore Rural Life</a>
+    </section>
+
+    <!-- The Concept (4 Pillars) -->
+    <section id="concept" class="concept">
+        <h2>The Rural Experience</h2>
+        <div class="pillars-grid">
+            <!-- Pillar 1 -->
+            <div class="pillar-card" onclick="openModal('plantation')">
+                <i class="fa-solid fa-leaf pillar-icon"></i>
+                <h3>Plantation Visits</h3>
+                <p>Walk through the mist-clad tea gardens of Nilgiris and aromatic coffee estates of Yercaud.</p>
+            </div>
+            <!-- Pillar 2 -->
+            <div class="pillar-card" onclick="openModal('farmstay')">
+                <i class="fa-solid fa-house-chimney-window pillar-icon"></i>
+                <h3>Farm-stay Experiences</h3>
+                <p>Live the rustic life. Wake up to rooster calls, milk cows, and enjoy fresh organic produce.</p>
+            </div>
+            <!-- Pillar 3 -->
+            <div class="pillar-card" onclick="openModal('village')">
+                <i class="fa-solid fa-people-group pillar-icon"></i>
+                <h3>Village Tourism</h3>
+                <p>Immerse in the culture. Witness pottery in Vilachery, weaving in Kanchipuram, and folk arts.</p>
+            </div>
+            <!-- Pillar 4 -->
+            <div class="pillar-card" onclick="openModal('livelihood')">
+                <i class="fa-solid fa-hands-holding-circle pillar-icon"></i>
+                <h3>Rural Livelihood Support</h3>
+                <p>Empower local communities. Buy GI-tagged crafts and spices directly from artisans and farmers.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Destinations Section -->
+    <section id="destinations" class="destinations-section">
+        <h2>Featured Rural Escapes</h2>
+        <div class="destinations-grid">
+            <!-- Destination 1 -->
+            <div class="destination-card">
+                <img src="https://placehold.co/600x400/166534/FFFFFF?text=Ooty+Tea+Estates" alt="Ooty Tea Estates">
+                <div class="destination-info">
+                    <h3>Ooty Tea Estates</h3>
+                    <p>Experience the heritage of tea making in the Blue Mountains. Tea tasting and factory tours.</p>
+                </div>
+            </div>
+            <!-- Destination 2 -->
+            <div class="destination-card">
+                <img src="https://placehold.co/600x400/854D0E/FFFFFF?text=Pollachi+Farms" alt="Pollachi Farms">
+                <div class="destination-info">
+                    <h3>Pollachi Farms</h3>
+                    <p>Coconut groves and cocoa farms. A perfect gateway to experience the Kongu region's agriculture.
+                    </p>
+                </div>
+            </div>
+            <!-- Destination 3 -->
+            <div class="destination-card">
+                <img src="https://placehold.co/600x400/166534/FFFFFF?text=Chettinad+Villages" alt="Chettinad Villages">
+                <div class="destination-info">
+                    <h3>Chettinad Villages</h3>
+                    <p>Heritage walks through Athangudi tile factories and weaving centers in the land of Nattukottai
+                        Chettiars.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 TN Verse - Marutham. Celebrating the Land and its People.</p>
+    </footer>
+
+    <!-- Modal Structure -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Modal Title</h2>
+            <div id="modalBody">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple Modal Logic (Inline for now, or can reuse culinary.js if adapted)
+        const modal = document.getElementById("infoModal");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalBody = document.getElementById("modalBody");
+
+        function openModal(type) {
+            modal.style.display = "flex";
+            let title = "";
+            let content = "";
+
+            switch (type) {
+                case 'plantation':
+                    title = "Plantation Visits";
+                    content = "<p>Explore the lush greenery of Tamil Nadu's hill stations. Participate in tea leaf plucking, visit processing factories, and enjoy tea tasting sessions. <strong>Highlights:</strong> Ooty, Coonoor, Valparai, Yercaud.</p>";
+                    break;
+                case 'farmstay':
+                    title = "Farm-stay Experiences";
+                    content = "<p>Disconnect from the city and reconnect with nature. Stay in traditional farmhouses, engage in farming activities like sowing and harvesting, and enjoy authentic home-cooked meals. <strong>Highlights:</strong> Pollachi, Theni, Dindigul.</p>";
+                    break;
+                case 'village':
+                    title = "Village Tourism";
+                    content = "<p>Experience the timeless traditions of Tamil villages. Watch artisans at work – from the potters of Vilachery to the weavers of Arni. Participate in village festivals and folk dances. <strong>Highlights:</strong> Chettinad, Thanjavur belt.</p>";
+                    break;
+                case 'livelihood':
+                    title = "Rural Livelihood Support";
+                    content = "<p>Your travel can make a difference. Support local economies by purchasing direct from producers. Visit women's self-help groups and craft centers. <strong>Products:</strong> Pattamadai mats, Thanjavur dolls, organic spices.</p>";
+                    break;
+            }
+
+            modalTitle.innerText = title;
+            modalBody.innerHTML = content;
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+
+</body>
+
+</html>

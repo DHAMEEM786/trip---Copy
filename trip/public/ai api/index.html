@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tamil Nadu Travel Planner AI</title>
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar / Controls Section -->
+    <aside class="sidebar">
+      <div class="brand">
+        <i class="fa-solid fa-route"></i>
+        <h1>TN.AI Planner</h1>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <label for="cityInput"><i class="fa-solid fa-city"></i> Destination</label>
+          <input type="text" id="cityInput" placeholder="Where do you want to go?">
+        </div>
+
+        <div class="control-row">
+          <div class="control-group">
+            <label for="startDate"><i class="fa-regular fa-calendar"></i> Start</label>
+            <input type="date" id="startDate">
+          </div>
+          <div class="control-group">
+            <label for="endDate"><i class="fa-regular fa-calendar-check"></i> End</label>
+            <input type="date" id="endDate">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Travelers</label>
+          <div class="select-grid" id="travelTypeOptions">
+            <button class="select-btn" data-value="solo"><i class="fa-solid fa-person"></i> Solo</button>
+            <button class="select-btn" data-value="partner"><i class="fa-solid fa-heart"></i> Couple</button>
+            <button class="select-btn active" data-value="family"><i class="fa-solid fa-users"></i> Family</button>
+            <button class="select-btn" data-value="friends"><i class="fa-solid fa-user-group"></i> Friends</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Budget</label>
+          <div class="select-grid" id="budgetOptions">
+            <button class="select-btn" data-value="cheap"><span>$</span> Budget</button>
+            <button class="select-btn active" data-value="moderate"><span>$$</span> Standard</button>
+            <button class="select-btn" data-value="luxury"><span>$$$</span> Luxury</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Interests</label>
+          <div class="select-grid" id="placeTypeOptions">
+            <button class="select-btn active" data-value="mixed">Mixed</button>
+            <button class="select-btn" data-value="adventure">Adventure</button>
+            <button class="select-btn" data-value="waterfall">Nature</button>
+            <button class="select-btn" data-value="temple">Heritage</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="customPrompt">Custom Requests</label>
+          <textarea id="customPrompt" rows="3"
+            placeholder="Specific requirements? (e.g., wheelchair access, vegan food)"></textarea>
+        </div>
+
+        <button onclick="generatePlan()" class="generate-btn">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content / Output Section -->
+    <main class="main-content">
+      <div class="result-header">
+        <h2>Your Itinerary</h2>
+        <div class="actions">
+          <button id="downloadBtn" style="display:none;" onclick="downloadPDF()" class="action-btn">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+          </button>
+        </div>
+      </div>
+
+      <div id="output" class="output-area">
+        <div class="placeholder-state">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <p>Enter your trip details to generate a personalized AI travel plan.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="k.js"></script>
+
+</body>
+
+</html>

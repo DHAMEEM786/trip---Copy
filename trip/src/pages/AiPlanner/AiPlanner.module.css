@@ -1,0 +1,342 @@
+/* Professional Dark Theme */
+.appContainer {
+    display: flex;
+    height: calc(100vh - 64px);
+    /* Adjust for navbar height if needed */
+    width: 100%;
+    background-color: #0f172a;
+    /* var(--bg-app) */
+    color: #f8fafc;
+    /* var(--text-primary) */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    position: fixed;
+    /* To behave like a standalone app page */
+    top: 64px;
+    /* Move below navbar */
+    left: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 350px;
+    /* var(--nav-width) */
+    background-color: #1e293b;
+    /* var(--bg-sidebar) */
+    border-right: 1px solid #475569;
+    /* var(--border-color) */
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* Brand */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    color: #fff;
+}
+
+.brand i {
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #800020 0%, #b22222 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.brand h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Form Controls */
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.controlGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.controlRow {
+    display: flex;
+    gap: 1rem;
+}
+
+.controlRow .controlGroup {
+    flex: 1;
+}
+
+.label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #94a3b8;
+    /* var(--text-secondary) */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input,
+.textarea {
+    background-color: #0f172a;
+    /* var(--bg-app) */
+    border: 1px solid #475569;
+    /* var(--border-color) */
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #f8fafc;
+    /* var(--text-primary) */
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.input:focus,
+.textarea:focus {
+    outline: none;
+    border-color: #800020;
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.2);
+}
+
+/* Select Grid (Buttons acting as radio) */
+.selectGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.selectBtn {
+    background-color: #0f172a;
+    /* var(--bg-app) */
+    border: 1px solid #475569;
+    /* var(--border-color) */
+    border-radius: 0.5rem;
+    padding: 0.6rem;
+    color: #94a3b8;
+    /* var(--text-secondary) */
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.selectBtn:hover {
+    background-color: #334155;
+    /* var(--bg-card) */
+    color: #f8fafc;
+    /* var(--text-primary) */
+}
+
+.selectBtnActive {
+    background: #334155;
+    /* var(--bg-card) */
+    border-color: #800020;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.selectBtn i {
+    font-size: 1rem;
+}
+
+.generateBtn {
+    margin-top: 1rem;
+    background: linear-gradient(135deg, #800020 0%, #b22222 100%);
+    color: #fff;
+    border: none;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.generateBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(128, 0, 32, 0.25);
+}
+
+.generateBtn:active {
+    transform: translateY(0);
+}
+
+/* Main Content */
+.mainContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    overflow-y: auto;
+    position: relative;
+    background-color: #0f172a;
+}
+
+.resultHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #475569;
+    /* var(--border-color) */
+    padding-bottom: 1rem;
+    color: #f8fafc;
+}
+
+.resultHeader h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.actionBtn {
+    background-color: #334155;
+    /* var(--bg-card) */
+    border: 1px solid #475569;
+    /* var(--border-color) */
+    color: #f8fafc;
+    /* var(--text-primary) */
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.actionBtn:hover {
+    background-color: #475569;
+}
+
+/* Output Area Styling (Markdown) */
+.outputArea {
+    flex: 1;
+    background-color: #1e293b;
+    /* var(--bg-sidebar) */
+    border: 1px solid #475569;
+    /* var(--border-color) */
+    border-radius: 1rem;
+    padding: 2rem;
+    overflow-y: auto;
+    line-height: 1.7;
+    font-size: 1.05rem;
+    color: #e2e8f0;
+}
+
+.placeholderState {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    /* var(--text-secondary) */
+    opacity: 0.6;
+    text-align: center;
+}
+
+.placeholderState i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #475569;
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #800020;
+}
+
+.loading i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Markdown Content Styles - keeping global for simplicity when using dangerouslySetInnerHTML, or scope with a class wrapper */
+/* Since we are using CSS modules, we might need global selectors for the inner HTML content unless we use a global stylesheet for markdown or target specifically */
+.outputArea :global(h1),
+.outputArea :global(h2),
+.outputArea :global(h3) {
+    color: #fff;
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    font-weight: 700;
+}
+
+.outputArea :global(h1) {
+    font-size: 1.8em;
+    border-bottom: 1px solid #475569;
+    padding-bottom: 0.3em;
+}
+
+.outputArea :global(p) {
+    margin-bottom: 1em;
+}
+
+.outputArea :global(ul),
+.outputArea :global(ol) {
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+}
+
+.outputArea :global(strong) {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+    .appContainer {
+        flex-direction: column;
+        height: auto;
+        overflow: auto;
+        position: relative;
+        top: 0;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        overflow: visible;
+    }
+
+    .mainContent {
+        height: auto;
+        min-height: 80vh;
+    }
+}

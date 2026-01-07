@@ -1,0 +1,467 @@
+/* Trips Styling */
+.trips-container {
+    min-height: 100vh;
+    padding-top: 0;
+    background: #f8f9fa;
+    font-family: 'Poppins', sans-serif;
+}
+
+.trips-hero {
+    text-align: center;
+    padding: 140px 1rem 120px;
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    margin-bottom: 0;
+    border-bottom-left-radius: 50% 20px;
+    border-bottom-right-radius: 50% 20px;
+}
+
+.trips-hero h1 {
+    font-size: 4.5rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.trips-hero p {
+    font-size: 1.4rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.add-trip-btn {
+    padding: 1rem 2rem;
+    background: #800020;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto;
+}
+
+.add-trip-btn:hover {
+    background: #600018;
+    /* Darker maroon */
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(128, 0, 32, 0.4);
+}
+
+.trips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Trip Card */
+.trip-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.trip-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.trip-card-image {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.trip-card-overlay-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.9);
+    color: #2d3436;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.icon-btn:hover {
+    transform: scale(1.1);
+}
+
+.edit-btn:hover {
+    color: #0984e3;
+}
+
+.delete-btn:hover {
+    color: #d63031;
+}
+
+.trip-card-content {
+    padding: 1.5rem;
+}
+
+.trip-card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #2d3436;
+}
+
+.trip-card-info {
+    display: flex;
+    justify-content: space-between;
+    color: #636e72;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.trip-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-details,
+.btn-explore {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-details {
+    background: #f1f2f6;
+    color: #2d3436;
+}
+
+.btn-explore {
+    background: rgba(128, 0, 32, 0.1);
+    color: #800020;
+}
+
+/* Expanded Section */
+.trip-details-expanded {
+    background: white;
+    margin-top: 2rem;
+    padding: 3rem;
+    border-radius: 30px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Compact Modal Refinements */
+.compact-modal {
+    background: #ffffff;
+    padding: 2rem !important;
+    border-radius: 30px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+}
+
+.close-modal-btn {
+    background: #f1f2f6;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #2d3436;
+    transition: all 0.3s ease;
+}
+
+.close-modal-btn:hover {
+    background: #800020;
+    color: white;
+}
+
+.form-main-grid-wide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.full-width-section {
+    grid-column: 1 / -1;
+}
+
+.expense-horizontal-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid #edf2f7;
+}
+
+.timeline-card {
+    background: #fdfdfd;
+    padding: 25px;
+    border-radius: 25px;
+    border: 1px solid #edf2f7;
+    margin-top: 10px;
+}
+
+.timeline-header-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 2fr 100px;
+    gap: 15px;
+    padding: 0 15px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #a0aec0;
+    text-transform: uppercase;
+}
+
+.timeline-items-container {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.timeline-row-item {
+    display: grid;
+    grid-template-columns: 60px 1fr 2fr 100px;
+    gap: 15px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    align-items: center;
+    border: 1px solid #edf2f7;
+}
+
+.timeline-row-item input {
+    border: none !important;
+    padding: 8px 0 !important;
+    background: transparent !important;
+    font-size: 0.9rem;
+}
+
+.timeline-row-item input:focus {
+    box-shadow: none !important;
+}
+
+.day-input {
+    text-align: center;
+    font-weight: 700;
+    color: #800020;
+}
+
+/* Timeline Actions */
+.timeline-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.btn-add-secondary {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.btn-add-secondary i {
+    font-size: 1rem;
+}
+
+/* Activity Button (Outlined) */
+.btn-add-activity {
+    background: transparent;
+    border: 2px dashed rgba(128, 0, 32, 0.3);
+    color: #800020;
+}
+
+.btn-add-activity:hover {
+    background: rgba(128, 0, 32, 0.05);
+    border-color: #800020;
+    transform: translateY(-2px);
+}
+
+/* New Day Button (Filled) */
+.btn-add-new-day {
+    background: #800020;
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(128, 0, 32, 0.2);
+}
+
+.btn-add-new-day:hover {
+    background: #600018;
+    /* Darker maroon */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(128, 0, 32, 0.3);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #edf2f7;
+}
+
+.btn-cancel {
+    flex: 1;
+    padding: 15px;
+    background: #f1f2f6;
+    border: none;
+    border-radius: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+@media (max-width: 800px) {
+    .form-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .expense-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .timeline-header-row {
+        display: none;
+    }
+
+    .timeline-row-item {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: white;
+    width: 95%;
+    max-width: 1200px;
+    max-height: 90vh;
+    border-radius: 35px;
+    padding: 3rem;
+    overflow-y: auto;
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.modal-form-section {
+    margin-bottom: 2rem;
+}
+
+.modal-form-section h3 {
+    margin-bottom: 1rem;
+    color: #800020;
+    font-size: 1.2rem;
+    border-bottom: 2px solid rgba(128, 0, 32, 0.1);
+    padding-bottom: 5px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #4a5568;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.7rem 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    outline: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: #fdfdfd;
+}
+
+
+.form-group input:focus {
+    border-color: #800020;
+}

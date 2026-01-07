@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Dashboard - GuideConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Base Styles (Laptop/Desktop View) */
+        .dashboard-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 1rem;
+        }
+
+        .login-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .booking-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .booking-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .booking-meta {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .booking-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .booking-contact {
+            text-align: right;
+        }
+
+        .booking-contact a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Tablet View (481px to 1024px) */
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                margin: 3rem auto;
+                padding: 0 1.5rem;
+            }
+
+            .booking-card {
+                padding: 1.25rem;
+            }
+        }
+
+        /* Mobile View (Max width 480px) */
+        @media (max-width: 480px) {
+            .dashboard-container {
+                margin: 2rem auto;
+                padding: 0 1rem;
+            }
+
+            .login-section {
+                padding: 1.5rem;
+                width: 100%;
+            }
+
+            .booking-card {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+                padding: 1rem;
+            }
+
+            .booking-info {
+                width: 100%;
+            }
+
+            .booking-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-top: 0.75rem;
+            }
+
+            .booking-contact {
+                text-align: left;
+                margin-top: 1rem;
+                width: 100%;
+                padding-top: 1rem;
+                border-top: 1px solid #f3f4f6;
+            }
+
+            .booking-contact a {
+                display: block;
+                margin-top: 0.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <h2>Guide Login</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-light);">Enter your registered phone number to view
+                bookings.</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="tel" id="guidePhone" placeholder="Enter Phone Number (e.g., 919876543210)" required>
+                </div>
+                <button type="submit" class="btn-primary btn-block">View Bookings</button>
+            </form>
+            <p id="loginError" style="color: red; margin-top: 1rem; font-size: 0.9rem;" class="hidden">Guide not found.
+                Please check the number.</p>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 id="guideNameDisplay">Welcome, Guide</h2>
+                <button id="logoutBtn" class="btn-secondary"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+            </div>
+
+            <div id="bookingsList">
+                <!-- Bookings will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="guide-dashboard.js"></script>
+</body>
+
+</html>

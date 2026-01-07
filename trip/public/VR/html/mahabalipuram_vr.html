@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mahabalipuram - Virtual Reality Tour</title>
+    <link rel="stylesheet" href="indexdup.css">
+    <style>
+        #location-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        #location-buttons button {
+            min-width: 120px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="vr-splash">
+        <div class="splash-content">
+            <h1>Experience Mahabalipuram VR</h1>
+            <p>Enter the immersive virtual tour of Shore Temple and Pancha Rathas. Audio guide will start automatically.
+            </p>
+            <button id="start-vr-btn">Begin Virtual Tour</button>
+        </div>
+    </div>
+
+    <div class="top-controls">
+        <select id="language-switcher">
+            <option value="en">English</option>
+            <option value="ta">தமிழ்</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="hi">हिन्दी</option>
+        </select>
+        <button id="audio-control-btn">🔊 Audio Enabled</button>
+        <button id="fullscreen-btn">Fullscreen</button>
+    </div>
+
+    <div id="location-buttons">
+        <button onclick="goTo('shivan_statue')" id="btn-shivan_statue">Shivan Statue</button>
+        <button onclick="goTo('main_temple')" id="btn-main_temple">Main Temple</button>
+        <button onclick="goTo('outer_complex')" id="btn-outer_complex">Outer Complex</button>
+        <button onclick="goTo('dharmaraja_ratha')" id="btn-dharmaraja_ratha">Dharmaraja Ratha</button>
+        <button onclick="goTo('arjuna_ratha')" id="btn-arjuna_ratha">Arjuna Ratha</button>
+        <button onclick="goTo('nakula_ratha')" id="btn-nakula_ratha">Nakula Ratha</button>
+    </div>
+
+    <div id="street-view"></div>
+
+    <!-- Sculpture Labels -->
+    <div class="custom-label" id="shivan_statue-label">
+        <span class="label-title">Shivan Statue (Somaskanda)</span>
+        <div class="label-desc">A magnificent carving of Lord Shiva with Parvati and Skanda inside the main shrine.
+        </div>
+    </div>
+    <div class="custom-label" id="main_temple-label">
+        <span class="label-title">Shore Temple Main Shrine</span>
+        <div class="label-desc">The 8th-century structural masterpiece, one of the oldest in South India.</div>
+    </div>
+    <div class="custom-label" id="outer_complex-label">
+        <span class="label-title">Shore Temple Outer Courtyard</span>
+        <div class="label-desc">The temple is surrounded by a boundary wall with numerous Nandi (sacred bull)
+            sculptures.</div>
+    </div>
+    <div class="custom-label" id="dharmaraja_ratha-label">
+        <span class="label-title">Dharmaraja Ratha</span>
+        <div class="label-desc">The tallest and most elaborate of the monolithic rathas, dedicated to Lord Shiva.</div>
+    </div>
+    <div class="custom-label" id="arjuna_ratha-label">
+        <span class="label-title">Arjuna Ratha</span>
+        <div class="label-desc">A beautiful monolithic temple with exquisite carvings of gods and celestial beings.
+        </div>
+    </div>
+    <div class="custom-label" id="nakula_ratha-label">
+        <span class="label-title">Nakula Sahadeva Ratha</span>
+        <div class="label-desc">Unique for its apsidal shape (Gajaprishta), resembling the back of an elephant.</div>
+    </div>
+
+    <!-- Audio elements placeholders -->
+    <audio id="shivan_statue-audio" src="audio/shivan_statue.mp3" preload="auto"></audio>
+    <audio id="main_temple-audio" src="audio/main_temple.mp3" preload="auto"></audio>
+    <audio id="outer_complex-audio" src="audio/outer_complex.mp3" preload="auto"></audio>
+    <audio id="dharmaraja_ratha-audio" src="audio/dharmaraja_ratha.mp3" preload="auto"></audio>
+    <audio id="arjuna_ratha-audio" src="audio/arjuna_ratha.mp3" preload="auto"></audio>
+    <audio id="nakula_ratha-audio" src="audio/nakula_ratha.mp3" preload="auto"></audio>
+
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=geometry&callback=initPanorama"
+        async defer></script>
+
+    <script>
+        let panorama = null;
+        let panoramaReady = false;
+        let audioContextLoaded = false;
+        let currentActiveLocation = null;
+        const audioBtn = document.getElementById('audio-control-btn');
+        let audioState = 'paused';
+
+        const translations = {
+            shivan_statue: {
+                en: { title: 'Shivan Statue (Somaskanda)', desc: 'A magnificent carving of Lord Shiva with Parvati and Skanda inside the main shrine.', nav: 'Shivan Statue' },
+                ta: { title: 'சிவன் சிலை (சோமாஸ்கந்தர்)', desc: 'கருவறைக்குள் பார்வதி மற்றும் ஸ்கந்தருடன் சிவபெருமானின் அற்புதமான செதுக்கல்.', nav: 'சிவன் சிலை' },
+                kn: { title: 'ಶಿವನ ವಿಗ್ರಹ (ಸೋಮಾಸ್ಕಂದ)', desc: 'ಮುಖ್ಯ ಗರ್ಭಗುಡಿಯೊಳಗೆ ಪಾರ್ವತಿ ಮತ್ತು ಸ್ಕಂದನೊಂದಿಗೆ ಶಿವನ ಭವ್ಯವಾದ ಕೆತ್ತನೆ.', nav: 'ಶಿವನ ವಿಗ್ರಹ' },
+                hi: { title: 'शिव प्रतिमा (सोमास्कंद)', desc: 'मुख्य गर्भगृह के अंदर पार्वती और स्कंद के साथ भगवान शिव की एक शानदार नक्काशी।', nav: 'शिव प्रतिमा' }
+            },
+            main_temple: {
+                en: { title: 'Shore Temple Main Shrine', desc: 'The 8th-century structural masterpiece, one of the oldest in South India.', nav: 'Main Temple' },
+                ta: { title: 'கடற்கரை கோயில் முக்கிய சன்னதி', desc: '8 ஆம் நூற்றாண்டின் கட்டடக்கலை அதிசயம், தென்னிந்தியாவின் பழமையான கோயில்களில் ஒன்று.', nav: 'முக்கிய கோயில்' },
+                kn: { title: 'ತೀರ ದೇವಾಲಯದ ಮುಖ್ಯ ಸನ್ನಿಧಿ', desc: '8 ನೇ ಶತಮಾನದ ವಾಸ್ತುಶಿಲ್ಪದ ಮೇರುಕೃತಿ, ದಕ್ಷಿಣ ಭಾರತದ ಅತ್ಯಂತ ಹಳೆಯ ದೇವಾಲಯಗಳಲ್ಲಿ ಒಂದಾಗಿದೆ.', nav: 'ಮುಖ್ಯ ದೇವಾಲಯ' },
+                hi: { title: 'तटीय मंदिर मुख्य गर्भगृह', desc: '8वीं शताब्दी की संरचनात्मक उत्कृष्ट कृति, दक्षिण भारत के सबसे पुराने मंदिरों में से एक।', nav: 'मुख्य मंदिर' }
+            },
+            outer_complex: {
+                en: { title: 'Shore Temple Outer Courtyard', desc: 'The temple is surrounded by a boundary wall with numerous Nandi (sacred bull) sculptures.', nav: 'Outer Complex' },
+                ta: { title: 'கடற்கரை கோயில் வெளி முற்றம்', desc: 'கோயில் ஏராளமான நந்தி சிலைகளுடன் கூடிய சுற்றுச்சுவரால் சூழப்பட்டுள்ளது.', nav: 'வெளி வளாகம்' },
+                kn: { title: 'ತೀರ ದೇವಾಲಯದ ಹೊರ ಪ್ರಾಂಗಣ', desc: 'ದೇವಾಲಯವು ಹಲವಾರು ನಂದಿ ಶಿಲ್ಪಗಳನ್ನು ಹೊಂದಿರುವ ಗಡಿ ಗೋಡೆಯಿಂದ ಆವೃತವಾಗಿದೆ.', nav: 'ಹೊರ ಪ್ರಾಂಗಣ' },
+                hi: { title: 'तटीय मंदिर बाहरी आंगन', desc: 'मंदिर कई नंदी (पवित्र बैल) मूर्तियों वाली एक चारदीवारी से घिरा हुआ है।', nav: 'बाहरी परिसर' }
+            },
+            dharmaraja_ratha: {
+                en: { title: 'Dharmaraja Ratha', desc: 'The tallest and most elaborate of the monolithic rathas, dedicated to Lord Shiva.', nav: 'Dharmaraja Ratha' },
+                ta: { title: 'தர்மராஜ ரதம்', desc: 'ஒற்றைக்கல் ரதங்களில் மிக உயரமானது மற்றும் விரிவாக செதுக்கப்பட்டது, சிவபெருமானுக்கு அர்ப்பணிக்கப்பட்டது.', nav: 'தர்மராஜ ரதம்' },
+                kn: { title: 'ಧರ್ಮರಾಜ ರಥ', desc: 'ಏಕಶಿಲೆ ರಥಗಳಲ್ಲಿ ಅತ್ಯಂತ ಎತ್ತರದ ಮತ್ತು ವಿಸ್ತಾರವಾದ ರಥ, ಶಿವನಿಗೆ ಅರ್ಪಿಸಲಾಗಿದೆ.', nav: 'ಧರ್ಮರಾಜ ರಥ' },
+                hi: { title: 'धर्मराज रथ', desc: 'भगवान शिव को समर्पित अखंड रथों में सबसे ऊंचा और सबसे विस्तृत।', nav: 'धर्मराज रथ' }
+            },
+            arjuna_ratha: {
+                en: { title: 'Arjuna Ratha', desc: 'A beautiful monolithic temple with exquisite carvings of gods and celestial beings.', nav: 'Arjuna Ratha' },
+                ta: { title: 'அர்ஜுன ரதம்', desc: 'தெய்வங்கள் மற்றும் வானுலக உயிரினங்களின் நேர்த்தியான செதுக்கல்களைக் கொண்ட அழகான ஒற்றைக்கல் கோயில்.', nav: 'அர்ஜுன ரதம்' },
+                kn: { title: 'ಅರ್ಜುನ ರಥ', desc: 'ದೇವತೆಗಳು ಮತ್ತು ಆಕಾಶ ಜೀವಿಗಳ ಸೊಗಸಾದ ಕೆತ್ತನೆಗಳನ್ನು ಹೊಂದಿರುವ ಸುಂದರವಾದ ಏಕಶಿಲೆ ದೇವಾಲಯ.', nav: 'ಅರ್ಜುನ ರಥ' },
+                hi: { title: 'अर्जुन रथ', desc: 'देवताओं और आकाशीय प्राणियों की उत्कृष्ट नक्काशी के साथ एक सुंदर अखंड मंदिर।', nav: 'अर्जुन रथ' }
+            },
+            nakula_ratha: {
+                en: { title: 'Nakula Sahadeva Ratha', desc: 'Unique for its apsidal shape (Gajaprishta), resembling the back of an elephant.', nav: 'Nakula Ratha' },
+                ta: { title: 'நகுல சகாதேவ ரதம்', desc: 'யானையின் பின்பகுதியை ஒத்த அதன் அப்சிடல் வடிவத்திற்கு (கஜபிருஷ்டம்) பெயர் பெற்றது.', nav: 'நகுல ரதம்' },
+                kn: { title: 'ನಕುಲ ಸಹದೇವ ರಥ', desc: 'ಆನೆಯ ಹಿಂಭಾಗವನ್ನು ಹೋಲುವ ಅದರ ಅಪಿಸಿಡಲ್ ಆಕಾರಕ್ಕೆ (ಗಜಪೃಷ್ಠ) ವಿಶಿಷ್ಟವಾಗಿದೆ.', nav: 'ನಕುಲ ರಥ' },
+                hi: { title: 'नकुल सहदेव रथ', desc: 'हाथी की पीठ के समान अपने अपसाइडल आकार (गजपृष्ठ) के लिए अद्वितीय।', nav: 'नकुल रथ' }
+            }
+        };
+
+        function updateAudioButton() {
+            if (audioState === 'playing') {
+                audioBtn.textContent = '🔊 Audio Enabled';
+                audioBtn.style.background = '#ff8c00';
+            } else {
+                audioBtn.textContent = '🔇 Audio Disabled';
+                audioBtn.style.background = 'white';
+                audioBtn.style.color = '#ff8c00';
+            }
+        }
+
+        function toggleAudio() {
+            if (audioState === 'playing') {
+                window.speechSynthesis.cancel();
+                const audio = document.getElementById(`${currentActiveLocation}-audio`);
+                if (audio) audio.pause();
+                audioState = 'paused';
+            } else {
+                playLocationAudio(currentActiveLocation);
+            }
+            updateAudioButton();
+        }
+
+        audioBtn.addEventListener('click', toggleAudio);
+
+        function playLocationAudio(locationId) {
+            // Stop any existing speech
+            window.speechSynthesis.cancel();
+
+            document.querySelectorAll('audio').forEach(a => {
+                a.pause();
+                a.currentTime = 0;
+            });
+
+            const lang = document.getElementById('language-switcher').value;
+            const audio = document.getElementById(`${locationId}-audio`);
+
+            // Map languages to SpeechSynthesis voices
+            const voiceLangs = {
+                en: 'en-US',
+                ta: 'ta-IN',
+                kn: 'kn-IN',
+                hi: 'hi-IN'
+            };
+
+            if (audio) {
+                const basePath = `audio/${locationId}`;
+                const audioSrc = lang === 'en' ? `${basePath}.mp3` : `${basePath}_${lang}.mp3`;
+                audio.src = audioSrc;
+                audio.load();
+
+                audio.play().then(() => {
+                    audioState = 'playing';
+                    updateAudioButton();
+                }).catch(err => {
+                    console.warn("Audio file not found or autoplay blocked, falling back to TTS:", err);
+                    // Fallback to Text-to-Speech
+                    speakDescription(locationId, lang);
+                });
+            } else {
+                speakDescription(locationId, lang);
+            }
+        }
+
+        function speakDescription(locationId, lang) {
+            if (!translations[locationId]) return;
+
+            const text = translations[locationId][lang].desc;
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            const voiceLangs = {
+                en: 'en-US',
+                ta: 'ta-IN',
+                kn: 'kn-IN',
+                hi: 'hi-IN'
+            };
+
+            utterance.lang = voiceLangs[lang] || 'en-US';
+            utterance.rate = 0.9; // Slightly slower for better clarity
+
+            utterance.onstart = () => {
+                audioState = 'playing';
+                updateAudioButton();
+            };
+
+            utterance.onend = () => {
+                audioState = 'paused';
+                updateAudioButton();
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        document.getElementById('start-vr-btn').addEventListener('click', () => {
+            document.getElementById('vr-splash').style.display = 'none';
+            currentActiveLocation = 'shivan_statue';
+            audioContextLoaded = true;
+            playLocationAudio('shivan_statue');
+        });
+
+        document.getElementById('language-switcher').addEventListener('change', function () {
+            const lang = this.value;
+            Object.keys(translations).forEach(id => {
+                const label = document.getElementById(`${id}-label`);
+                if (label) {
+                    label.querySelector('.label-title').textContent = translations[id][lang].title;
+                    label.querySelector('.label-desc').textContent = translations[id][lang].desc;
+                }
+                const navBtn = document.getElementById(`btn-${id}`);
+                if (navBtn) navBtn.textContent = translations[id][lang].nav;
+            });
+            if (audioState === 'playing') playLocationAudio(currentActiveLocation);
+        });
+
+        function goTo(place) {
+            const locations = {
+                shivan_statue: { lat: 12.6164578, lng: 80.1993684, heading: 0 },
+                main_temple: { lat: 12.6164704, lng: 80.1992754, heading: 90 },
+                outer_complex: { lat: 12.6168093, lng: 80.1990256, heading: 180 },
+                dharmaraja_ratha: { lat: 12.6088429, lng: 80.1894828, heading: 270 },
+                arjuna_ratha: { lat: 12.608761, lng: 80.1897363, heading: 0 },
+                nakula_ratha: { lat: 12.6092166, lng: 80.1897195, heading: 90 }
+            };
+            const target = locations[place];
+            const svService = new google.maps.StreetViewService();
+            svService.getPanorama({ location: target, radius: 50 }, (data, status) => {
+                if (status === 'OK') {
+                    panorama.setPano(data.location.pano);
+                    panorama.setPov({ heading: target.heading, pitch: 0, zoom: 1 });
+                }
+            });
+        }
+
+        function initPanorama() {
+            const sculptures = [
+                { id: "shivan_statue", location: { lat: 12.6164578, lng: 80.1993684 }, heading: 0, pitch: 0 },
+                { id: "main_temple", location: { lat: 12.6164704, lng: 80.1992754 }, heading: 90, pitch: 0 },
+                { id: "outer_complex", location: { lat: 12.6168093, lng: 80.1990256 }, heading: 180, pitch: 0 },
+                { id: "dharmaraja_ratha", location: { lat: 12.6088429, lng: 80.1894828 }, heading: 270, pitch: 0 },
+                { id: "arjuna_ratha", location: { lat: 12.608761, lng: 80.1897363 }, heading: 0, pitch: 0 },
+                { id: "nakula_ratha", location: { lat: 12.6092166, lng: 80.1897195 }, heading: 90, pitch: 0 }
+            ];
+
+            const svService = new google.maps.StreetViewService();
+            svService.getPanorama({ location: sculptures[0].location, radius: 50 }, (data, status) => {
+                if (status === "OK") {
+                    panorama = new google.maps.StreetViewPanorama(document.getElementById("street-view"), {
+                        pano: data.location.pano,
+                        pov: { heading: 0, pitch: 0 },
+                        visible: true,
+                        addressControl: false
+                    });
+
+                    panorama.addListener("pov_changed", () => {
+                        const pov = panorama.getPov();
+                        const pos = panorama.getPosition();
+                        let newActiveLocation = null;
+
+                        sculptures.forEach(sculpture => {
+                            const headingDiff = Math.abs(pov.heading % 360 - sculpture.heading);
+                            const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                                pos, new google.maps.LatLng(sculpture.location.lat, sculpture.location.lng)
+                            );
+                            const isVisible = headingDiff <= 20 && distance <= 15;
+                            document.getElementById(`${sculpture.id}-label`).style.display = isVisible ? "block" : "none";
+                            if (isVisible) newActiveLocation = sculpture.id;
+                        });
+
+                        if (newActiveLocation && newActiveLocation !== currentActiveLocation) {
+                            currentActiveLocation = newActiveLocation;
+                            if (audioContextLoaded) playLocationAudio(newActiveLocation);
+                        }
+                    });
+                    panoramaReady = true;
+                }
+            });
+        }
+
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        });
+    </script>
+</body>
+
+</html>

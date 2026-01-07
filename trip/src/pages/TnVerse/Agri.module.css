@@ -1,0 +1,248 @@
+/* Agri Page Styles */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+
+.agriPage {
+    font-family: 'Poppins', sans-serif;
+    color: #1F2937;
+    /* text-dark */
+    background-color: #F0FDF4;
+    /* bg-cream (Green 50) */
+    overflow-x: hidden;
+    padding-top: 64px;
+}
+
+/* Hero Section */
+.hero {
+    height: 80vh;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://placehold.co/1920x1080/166534/FFFFFF?text=Tea+Plantations');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #F3F4F6;
+    /* text-light */
+    padding: 0 2rem;
+}
+
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero p {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+
+.ctaBtn {
+    padding: 1rem 2rem;
+    background-color: #166534;
+    /* primary-color */
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: transform 0.3s, background 0.3s;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.ctaBtn:hover {
+    transform: translateY(-3px);
+    background-color: #854D0E;
+    /* secondary-color */
+}
+
+/* Concept Section */
+.concept {
+    padding: 5rem 2rem;
+    text-align: center;
+}
+
+.concept h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #854D0E;
+    /* secondary-color */
+    margin-bottom: 3rem;
+}
+
+.pillarsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.pillarCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pillarCard:hover {
+    transform: translateY(-10px);
+}
+
+.pillarIcon {
+    font-size: 2.5rem;
+    color: #166534;
+    /* primary-color */
+    margin-bottom: 1rem;
+}
+
+.pillarCard h3 {
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 1rem;
+    color: #854D0E;
+    /* secondary-color */
+}
+
+/* Featured Destinations Section */
+.destinationsSection {
+    padding: 5rem 2rem;
+    background-color: white;
+}
+
+.destinationsSection h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #854D0E;
+    /* secondary-color */
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.destinationsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.destinationCard {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    background: #F0FDF4;
+    /* bg-cream */
+}
+
+.destinationCard:hover {
+    transform: scale(1.03);
+}
+
+.destinationCard img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.destinationInfo {
+    padding: 1.5rem;
+}
+
+.destinationInfo h3 {
+    color: #854D0E;
+    /* secondary-color */
+    margin-bottom: 0.5rem;
+    font-family: 'Playfair Display', serif;
+}
+
+/* Footer */
+.footer {
+    background-color: #854D0E;
+    /* secondary-color */
+    color: #F3F4F6;
+    /* text-light */
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Modal */
+.modalOverlay {
+    display: flex;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s;
+}
+
+.modalContent {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    position: relative;
+    animation: slideUp 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.closeBtn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.closeBtn:hover {
+    color: #854D0E;
+}
+
+.modalTitle {
+    font-family: 'Playfair Display', serif;
+    color: #854D0E;
+    margin-bottom: 1.5rem;
+    padding-right: 2rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

@@ -1,0 +1,573 @@
+/* Culinary Page Styles - Glassmorphism Theme */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap');
+
+:root {
+    --primary-orange: #800020;
+    --secondary-red: #c0392b;
+    --text-dark: #2c3e50;
+    --text-light: #ecf0f1;
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    /* Slightly more transparent for dark bg */
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.culinary-page {
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-light);
+    /* Switch to light text for dark background */
+    background: url('../../../assets/culinary/header_premium.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Blur Overlay for Background */
+.culinary-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    /* Darker overlay for text readability */
+    backdrop-filter: blur(5px);
+    z-index: 0;
+}
+
+/* Hero Section */
+.culinary-hero {
+    height: 50vh;
+    /* Removed specific background, using page background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    /* Above background overlay */
+}
+
+.hero-content h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    margin-bottom: 10px;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.hero-content h1 span {
+    font-family: 'Dancing Script', cursive;
+    color: #f1c40f;
+    font-size: 5rem;
+}
+
+.hero-content p {
+    font-size: 1.5rem;
+    font-weight: 300;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Food Trails Section */
+.food-trails-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #fff;
+    /* White title on dark theme */
+    margin-bottom: 10px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.section-header p {
+    color: #e0e0e0;
+    font-style: italic;
+}
+
+/* Filters */
+.trails-filters {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-search-wrapper {
+    position: relative;
+    margin-right: 15px;
+}
+
+.filter-search-input {
+    padding: 12px 25px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    width: 250px;
+    /* Base width for desktop */
+    outline: none;
+    font-family: 'Nunito', sans-serif;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    transition: width 0.3s ease, box-shadow 0.3s ease;
+    font-size: 1rem;
+}
+
+.filter-search-input:focus {
+    width: 300px;
+    /* Expand on focus */
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.btn-apply-filters {
+    padding: 12px 30px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #d35400, #c0392b);
+    color: white;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(211, 84, 0, 0.4);
+    font-size: 1rem;
+}
+
+.btn-apply-filters:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(211, 84, 0, 0.6);
+}
+
+/* Grid System - 4 Columns */
+.trails-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+
+/* Glassmorphism Card Styles */
+.trail-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    /* More rounded */
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.4s;
+    display: flex;
+    flex-direction: column;
+}
+
+.trail-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+    /* Slightly brighter on hover */
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Theme Colors - Gradients for Headers */
+.card-madurai .card-header-bar {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.9), rgba(192, 57, 43, 0.9));
+}
+
+.card-chennai .card-header-bar {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.9), rgba(41, 128, 185, 0.9));
+}
+
+.card-coimbatore .card-header-bar {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.9), rgba(39, 174, 96, 0.9));
+}
+
+.card-chettinad .card-header-bar {
+    background: linear-gradient(135deg, rgba(211, 84, 0, 0.9), rgba(160, 64, 0, 0.9));
+}
+
+.card-header-bar {
+    padding: 15px;
+    color: white;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.card-images {
+    height: 180px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.card-images img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trail-card:hover .card-images img {
+    transform: scale(1.1);
+}
+
+.card-info {
+    padding: 20px;
+    flex: 1;
+    color: white;
+    /* Text color for glass card */
+}
+
+.info-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.info-row i {
+    width: 25px;
+    margin-top: 3px;
+    color: #f1c40f;
+    /* Yellow icons pop better on dark glass */
+}
+
+/* Icon specific colors handled in JSX or inherit theme? 
+   Let's set generic, specific colors via parent class if needed 
+*/
+.card-madurai .info-row i {
+    color: #c0392b;
+}
+
+.card-chennai .info-row i {
+    color: #2980b9;
+}
+
+.card-coimbatore .info-row i {
+    color: #27ae60;
+}
+
+.card-chettinad .info-row i {
+    color: #d35400;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.info-val {
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.btn-explore-trail {
+    width: 85%;
+    margin: 0 auto 20px;
+    padding: 10px 0;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.card-madurai .btn-explore-trail {
+    background: linear-gradient(to right, #c0392b, #e74c3c);
+}
+
+.card-chennai .btn-explore-trail {
+    background: linear-gradient(to right, #2980b9, #3498db);
+}
+
+.card-coimbatore .btn-explore-trail {
+    background: linear-gradient(to right, #27ae60, #2ecc71);
+}
+
+.card-chettinad .btn-explore-trail {
+    background: linear-gradient(to right, #d35400, #e67e22);
+}
+
+.btn-explore-trail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    /* Darker backdrop */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    /* Bright modal for readability */
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 15px;
+    padding: 30px;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+    color: #333;
+    /* Dark text inside modal */
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #e74c3c;
+    transition: transform 0.2s;
+}
+
+.close-modal:hover {
+    transform: rotate(90deg);
+}
+
+.modal-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+.modal-rating {
+    margin-bottom: 10px;
+    color: #f1c40f;
+    font-size: 1.1rem;
+}
+
+.modal-address {
+    color: #7f8c8d;
+    margin-bottom: 20px;
+}
+
+.modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 0;
+    overflow-x: visible;
+}
+
+@media (max-width: 900px) {
+    .modal-gallery {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.modal-gallery img {
+    height: 150px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.modal-gallery img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.modal-details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+.info-item {
+    margin-bottom: 15px;
+}
+
+.btn-google-maps {
+    display: inline-block;
+    padding: 10px 25px;
+    background: #4285f4;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: bold;
+    margin-top: 10px;
+    box-shadow: 0 3px 8px rgba(66, 133, 244, 0.3);
+    transition: transform 0.2s;
+}
+
+.btn-google-maps:hover {
+    transform: translateY(-2px);
+}
+
+.reviews-list {
+    margin-top: 15px;
+}
+
+.review-item {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.review-header img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.review-rating {
+    color: #f1c40f;
+    margin-left: auto;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 1200px) {
+    .trails-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .trails-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .modal-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-gallery {
+        grid-template-columns: repeat(3, 1fr);
+        /* 3 cols on tablet */
+    }
+
+    .culinary-hero {
+        height: 50vh;
+        /* background-position handled by page bg */
+    }
+}
+
+@media (max-width: 600px) {
+    .trails-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-gallery {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 cols on mobile */
+    }
+
+    .culinary-hero {
+        height: 40vh;
+    }
+
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero-content h1 span {
+        font-size: 3.5rem;
+    }
+
+    .hero-content p {
+        font-size: 1.1rem;
+    }
+
+    /* Responsive Filters */
+    .trails-filters {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .filter-search-wrapper,
+    .filter-search-input,
+    .btn-apply-filters {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .filter-search-input:focus {
+        width: 100%;
+        /* No expansion on mobile, just full width */
+    }
+
+    .modal-content {
+        padding: 20px;
+        width: 95%;
+    }
+
+    .modal-header h2 {
+        font-size: 1.8rem;
+    }
+}

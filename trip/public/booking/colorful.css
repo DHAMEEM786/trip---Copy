@@ -1,0 +1,35 @@
+/* Professional Accents for Booking Page */
+
+/* Remove childish pink/purple overrides */
+.booking-modal-content {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.booking-header {
+    background: #1a1a1a !important;
+    /* Professional Dark Header */
+    padding: 24px 40px !important;
+}
+
+.booking-body {
+    background: #ffffff !important;
+    padding: 30px !important;
+}
+
+.booking-section h3 {
+    color: #111827 !important;
+    font-weight: 700 !important;
+}
+
+.form-input {
+    border: 2px solid #e5e7eb !important;
+    color: #111827 !important;
+}
+
+.form-input:focus {
+    border-color: #ff8c00 !important;
+    box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1) !important;
+}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Guide Booking</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Find Your Perfect Travel Guide</h1>
+                <p>Explore Salem, Chennai, Munnar and more with local experts.</p>
+                <div class="search-bar">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <input type="text" id="searchInput" placeholder="Where do you want to go? (e.g., Salem)">
+                    <button id="searchBtn">Search</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="guides-section">
+            <div class="container">
+                <h2>Top Rated Guides</h2>
+                <div id="guidesContainer" class="guides-grid">
+                    <!-- Guide cards will be injected here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Book a Guide</h2>
+            <div id="bookingGuideInfo" class="booking-guide-info">
+                <!-- Guide details will be populated here -->
+            </div>
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label for="bookingDate">Date</label>
+                    <input type="date" id="bookingDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookingTime">Time Slot</label>
+                    <select id="bookingTime" required>
+                        <option value="">Select a time</option>
+                        <option value="Morning (9AM - 1PM)">Morning (9AM - 1PM)</option>
+                        <option value="Afternoon (2PM - 6PM)">Afternoon (2PM - 6PM)</option>
+                        <option value="Full Day (9AM - 6PM)">Full Day (9AM - 6PM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bookingGuests">Number of Guests</label>
+                    <input type="number" id="bookingGuests" min="1" max="10" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookingName">Your Name</label>
+                    <input type="text" id="bookingName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookingContact">Contact Number</label>
+                    <input type="tel" id="bookingContact" placeholder="Enter your phone number" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary btn-block" id="cancelBookingBtn">Cancel</button>
+                    <button type="submit" class="btn-primary btn-block">Confirm Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal hidden">
+        <div class="modal-content success-content">
+            <div class="success-icon">
+                <i class="fa-solid fa-check-circle"></i>
+            </div>
+            <h2>Booking Confirmed!</h2>
+            <p>Your trip has been booked successfully.</p>
+            <div id="confirmationDetails" class="confirmation-details">
+                <!-- Details will be shown here -->
+            </div>
+            <button id="closeConfirmationBtn" class="btn-primary btn-block">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

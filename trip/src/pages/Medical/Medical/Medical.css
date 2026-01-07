@@ -1,0 +1,500 @@
+/* Medical Page Styles */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Nunito:wght@300;400;600;700&display=swap');
+
+:root {
+    --med-green: #2d6a4f;
+    --med-teal: #38b2ac;
+    --med-blue: #3182ce;
+    --med-gold: #d69e2e;
+    --glass-bg: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --text-dark: #2d3748;
+}
+
+.medical-page {
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    background: url('../../../assets/medical/wellness.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Blur Overlay for Background */
+.medical-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    z-index: 0;
+}
+
+.medical-content {
+    position: relative;
+    z-index: 1;
+    padding: 40px 20px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header */
+.medical-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 60px;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.medical-header h1 {
+    font-family: 'Merriweather', serif;
+    font-size: 3rem;
+    margin: 0 0 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.medical-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+/* Cards Grid */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    padding: 0 20px;
+}
+
+/* Glassmorphism Card */
+.medical-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    animation: fadeInUp 0.8s ease-out backwards;
+}
+
+/* Stagger Animations */
+.medical-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.medical-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.medical-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.medical-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.card-img-wrapper {
+    height: 250px;
+    overflow: hidden;
+    position: relative;
+}
+
+.card-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.medical-card:hover .card-img-wrapper img {
+    transform: scale(1.1);
+}
+
+.card-content {
+    padding: 25px;
+    text-align: center;
+    color: white;
+    /* Default text color for contrast on blur */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Text visibility improvement: Add a slight dark gradient behind text if needed, 
+   but since card bg is white-ish glass, we might need dark text or text-shadow. 
+   Let's go with white text + shadow for the 'premium dark' feel or Dark text for 'clean' feel.
+   User asked for 'slightly blurred nature background', assume dark text on light glass is better.
+*/
+
+.card-content {
+    color: #fff;
+    /* Keep white for now as background might be dark nature */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.medical-card {
+    /* Let's make the glass card slightly dark OR light. 
+       If background is bright sunrise, dark glass is better. 
+       If background is generic nature, light glass.
+       Let's use a gradient overlay on the card content to ensure readability.
+    */
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.card-content h3 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.5rem;
+    margin: 0 0 5px;
+    color: #fff;
+}
+
+.card-content h4 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--med-gold);
+    /* Gold subtitle */
+    margin: 0 0 15px;
+    font-weight: 700;
+}
+
+.card-content p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 25px;
+    opacity: 0.9;
+}
+
+.card-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    align-self: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Button Variants */
+.btn-wellness {
+    background: linear-gradient(135deg, #48bb78 0%, #2f855a 100%);
+    color: white;
+}
+
+.btn-ayurveda {
+    background: linear-gradient(135deg, #ed8936 0%, #c05621 100%);
+    color: white;
+}
+
+.btn-hospital {
+    background: linear-gradient(135deg, #4299e1 0%, #2b6cb0 100%);
+    color: white;
+}
+
+.card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    filter: brightness(1.1);
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .cards-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 650px) {
+    .cards-container {
+        grid-template-columns: 1fr;
+    }
+
+    .medical-header h1 {
+        font-size: 2rem;
+    }
+}
+
+/* SILENT THEME - Wellness Retreats */
+.wellness-view {
+    min-height: 80vh;
+    padding: 20px;
+    animation: fadeIn 0.8s ease-out;
+    background: #fdfbf7;
+    /* Very soft off-white/cream */
+    color: #4a5568;
+    border-radius: 12px;
+}
+
+.silent-nav {
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: center;
+    /* Center the back button */
+}
+
+.btn-silent-back {
+    background: transparent;
+    border: 1px solid #cbd5e0;
+    padding: 8px 30px;
+    /* More padding for better button shape */
+    border-radius: 30px;
+    color: #718096;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+}
+
+.btn-silent-back:hover {
+    border-color: var(--med-green);
+    color: var(--med-green);
+}
+
+.silent-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.silent-header h2 {
+    font-family: 'Merriweather', serif;
+    font-size: 2.5rem;
+    color: var(--med-green);
+    margin-bottom: 10px;
+    font-weight: 300;
+}
+
+.silent-header p {
+    font-family: 'Nunito', sans-serif;
+    color: #718096;
+    font-weight: 300;
+}
+
+.silent-search-container {
+    max-width: 600px;
+    margin: 0 auto 60px;
+    position: relative;
+}
+
+.silent-input {
+    width: 100%;
+    padding: 20px 30px;
+    border: none;
+    border-radius: 50px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    /* Soft shadow */
+    font-family: 'Merriweather', serif;
+    font-size: 1.1rem;
+    color: #4a5568;
+    outline: none;
+    transition: all 0.4s ease;
+}
+
+.silent-input:focus {
+    box-shadow: 0 15px 40px rgba(45, 106, 79, 0.1);
+    transform: translateY(-2px);
+}
+
+.silent-input::placeholder {
+    color: #cbd5e0;
+    font-weight: 300;
+}
+
+.doctor-select {
+    cursor: pointer;
+    appearance: none;
+    /* Remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232d6a4f%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 25px center;
+    background-size: 15px;
+    background-color: white;
+    /* Ensure white bg */
+}
+
+/* Peaceful Places Grid */
+.peace-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 40px;
+    padding: 0 20px;
+}
+
+.peace-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03);
+    transition: all 0.5s ease;
+    border: 1px solid #f7fafc;
+}
+
+.peace-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.06);
+}
+
+.peace-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    filter: sepia(10%);
+    /* Slight warm tone */
+    transition: transform 0.8s ease;
+}
+
+.peace-card:hover .peace-img {
+    transform: scale(1.05);
+}
+
+.peace-content {
+    padding: 25px;
+    text-align: center;
+}
+
+.peace-content h3 {
+    font-family: 'Merriweather', serif;
+    color: #2d3748;
+    margin: 0 0 5px;
+    font-size: 1.2rem;
+}
+
+.peace-content p {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.peace-rating {
+    color: var(--med-gold);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.btn-view-map {
+    background: transparent;
+    border: 1px solid var(--med-gold);
+    color: var(--med-gold);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+}
+
+.btn-view-map:hover {
+    background: var(--med-gold);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(214, 158, 46, 0.3);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive - Search View */
+@media (max-width: 768px) {
+    .silent-header h2 {
+        font-size: 2rem;
+    }
+
+    .silent-search-container {
+        padding: 0 20px;
+    }
+
+    .silent-input {
+        padding: 15px 25px;
+        font-size: 1rem;
+    }
+
+    .peace-grid {
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .medical-content {
+        padding: 20px 10px;
+    }
+
+    .silent-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .wellness-view {
+        padding: 15px;
+    }
+
+    .peace-grid {
+        grid-template-columns: 1fr;
+        /* Single column on mobile */
+    }
+
+    .peace-img {
+        height: 180px;
+    }
+
+    .btn-silent-back {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+    }
+
+    .doctor-select {
+        margin-bottom: 20px !important;
+    }
+}

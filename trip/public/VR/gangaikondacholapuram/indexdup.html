@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gangai Konda Cholapuram - Virtual Reality Tour</title>
+    <link rel="stylesheet" href="../html/indexdup.css">
+    <style>
+        #street-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .top-settings-wrapper {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1002;
+        }
+
+        .settings-capsule {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border: 1px solid rgba(255, 140, 0, 0.1);
+        }
+
+        .settings-capsule select,
+        .settings-capsule button {
+            background: white;
+            color: #ff8c00;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        #audio-control-btn {
+            background: #ff8c00 !important;
+            color: white !important;
+            min-width: 140px;
+        }
+
+        #fullscreen-btn {
+            background: #ff8c00 !important;
+            color: white !important;
+            border: 1px solid #ff8c00;
+        }
+
+        #fullscreen-btn:hover,
+        #audio-control-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        #language-switcher:hover {
+            background: #fff5e6;
+        }
+
+        .top-nav-wrapper {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 1002;
+            display: flex;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        #location-buttons {
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #location-buttons button {
+            background: rgba(255, 255, 255, 0.95);
+            color: #ff8c00;
+            border: 2.5px solid #ff8c00;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s;
+            font-size: 13px;
+            min-width: 180px;
+        }
+
+        #location-buttons button:hover {
+            background: #ff8c00;
+            color: white;
+            transform: scale(1.03);
+            box-shadow: 0 6px 18px rgba(255, 140, 0, 0.3);
+        }
+
+        .custom-label {
+            z-index: 1001;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="vr-splash">
+        <div class="splash-content">
+            <h1>Experience Gangai Konda Cholapuram</h1>
+            <p>Enter the immersive virtual tour of the Great Living Chola Temple. Audio guide will start automatically.
+            </p>
+            <button id="start-vr-btn">Begin Virtual Tour</button>
+        </div>
+    </div>
+
+    <div class="top-nav-wrapper">
+        <div id="location-buttons">
+            <button onclick="goTo('entrance')" id="btn-entrance">Entrance & Nandhi</button>
+            <button onclick="goTo('main_shrine')" id="btn-main_shrine">Kailashanadhar Temple</button>
+            <button onclick="goTo('vimana_view')" id="btn-vimana_view">Main Vimana View</button>
+            <button onclick="goTo('lion_well')" id="btn-lion_well">Lion Well (Simhakinaru)</button>
+            <button onclick="goTo('mandapam')" id="btn-mandapam">Mahamandapam</button>
+        </div>
+    </div>
+
+    <div class="top-settings-wrapper">
+        <div class="settings-capsule">
+            <select id="language-switcher">
+                <option value="en">English</option>
+                <option value="ta">தமிழ்</option>
+                <option value="kn">ಕನ್ನಡ</option>
+                <option value="hi">हिन्दी</option>
+            </select>
+            <button id="audio-control-btn">🔊 Audio Enabled</button>
+            <button id="fullscreen-btn">⛶ Fullscreen</button>
+        </div>
+    </div>
+
+    <div id="street-view"></div>
+
+    <!-- Labels -->
+    <div class="custom-label" id="entrance-label">
+        <span class="label-title">Entrance & Nandhi</span>
+        <div class="label-desc">The grand entrance featuring the massive monolithic Nandi statue facing the shrine.
+        </div>
+    </div>
+    <div class="custom-label" id="main_shrine-label">
+        <span class="label-title">Kailashanadhar Temple</span>
+        <div class="label-desc">The main sanctum sanctorum housing the colossal Shiva Lingam, similar to Thanjavur.
+        </div>
+    </div>
+    <div class="custom-label" id="vimana_view-label">
+        <span class="label-title">Main Vimana View</span>
+        <div class="label-desc">A perfect view of the 55-meter high curvilinear Vimana, showing its unique concave
+            structure.</div>
+    </div>
+    <div class="custom-label" id="lion_well-label">
+        <span class="label-title">Lion Well (Simhakinaru)</span>
+        <div class="label-desc">The famous lion-faced well entrance, said to be used by the King to pour heavy Ganges
+            water.</div>
+    </div>
+    <div class="custom-label" id="mandapam-label">
+        <span class="label-title">Mahamandapam</span>
+        <div class="label-desc">The pillared hall with intricate Chola sculptures and artworks adorning the walls.</div>
+    </div>
+
+    <!-- Audio placeholders -->
+    <audio id="entrance-audio" preload="auto"></audio>
+    <audio id="main_shrine-audio" preload="auto"></audio>
+    <audio id="vimana_view-audio" preload="auto"></audio>
+    <audio id="lion_well-audio" preload="auto"></audio>
+    <audio id="mandapam-audio" preload="auto"></audio>
+
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=geometry&callback=initPanorama"
+        async defer></script>
+
+    <script>
+        let panorama = null;
+        let panoramaReady = false;
+        let audioContextLoaded = false;
+        let currentActiveLocation = null;
+        const audioBtn = document.getElementById('audio-control-btn');
+        let audioState = 'paused';
+
+        const translations = {
+            entrance: {
+                en: { title: 'Entrance & Nandhi', desc: 'The grand entrance featuring the massive monolithic Nandi statue facing the shrine.', nav: 'Entrance & Nandhi' },
+                ta: { title: 'நுழைவாயில் மற்றும் நந்தி', desc: 'சன்னதியை எதிர்கொள்ளும் பிரமாண்டமான ஒற்றைக்கல் நந்தி சிலையுடன் கூடிய பிரதான நுழைவாயில்.', nav: 'நுழைவாயில் & நந்தி' },
+                kn: { title: 'ಪ್ರವೇಶದ್ವಾರ ಮತ್ತು ನಂದಿ', desc: 'ಗರ್ಭಗುಡಿ ಎದುರಿಸುತ್ತಿರುವ ಬೃಹತ್ ಏಕಶಿಲಾ ನಂದಿ ವಿಗ್ರಹವನ್ನು ಒಳಗೊಂಡಿರುವ ಭವ್ಯ ಪ್ರವೇಶದ್ವಾರ.', nav: 'ಪ್ರವೇಶದ್ವಾರ & ನಂದಿ' },
+                hi: { title: 'प्रवेश और नंदी', desc: 'गर्भगृह के सामने विशाल अखंड नंदी प्रतिमा वाला भव्य प्रवेश द्वार।', nav: 'प्रवेश और नंदी' }
+            },
+            main_shrine: {
+                en: { title: 'Kailashanadhar Temple', desc: 'The main sanctum sanctorum housing the colossal Shiva Lingam, similar to Thanjavur.', nav: 'Kailashanadhar Temple' },
+                ta: { title: 'கைலாசநாதர் கோவில்', desc: 'தஞ்சாவூரைப் போலவே மிகப்பெரிய சிவலிங்கம் அமைந்துள்ள பிரதான கருவறை.', nav: 'கைலாசநாதர் கோவில்' },
+                kn: { title: 'ಕೈಲಾಶನಾಥರ್ ದೇವಸ್ಥಾನ', desc: 'ತಂಜಾವೂರಿನಂತೆಯೇ ಬೃಹತ್ ಶಿವಲಿಂಗವನ್ನು ಹೊಂದಿರುವ ಮುಖ್ಯ ಗರ್ಭಗುಡಿ.', nav: 'ಕೈಲಾಶನಾಥರ್ ದೇವಸ್ಥಾನ' },
+                hi: { title: 'कैलाशनादर मंदिर', desc: 'मुख्य गर्भगृह जिसमें तंजावुर के समान विशाल शिव लिंग है।', nav: 'कैलाशनादर मंदिर' }
+            },
+            vimana_view: {
+                en: { title: 'Main Vimana View', desc: 'A perfect view of the 55-meter high curvilinear Vimana, showing its unique concave structure.', nav: 'Main Vimana View' },
+                ta: { title: 'முக்கிய விமானக் காட்சி', desc: '55 மீட்டர் உயரமுள்ள வளைந்த விமானத்தின் சரியான காட்சி, அதன் தனித்துவமான குழிவான அமைப்பைக் காட்டுகிறது.', nav: 'விமானக் காட்சி' },
+                kn: { title: 'ಮುಖ್ಯ ವಿಮಾನದ ನೋಟ', desc: '55 ಮೀಟರ್ ಎತ್ತರದ ವಕ್ರರೇಖೆಯ ವಿಮಾನದ ಪರಿಪೂರ್ಣ ನೋಟ, ಅದರ ವಿಶಿಷ್ಟ ನಿಮ್ನ ರಚನೆಯನ್ನು ತೋರಿಸುತ್ತದೆ.', nav: 'ವಿಮಾನದ ನೋಟ' },
+                hi: { title: 'मुख्य विमान दृश्य', desc: '55 मीटर ऊंचे वक्र विमान का एक आदर्श दृश्य, जो इसकी अनूठी अवतल संरचना को दर्शाता है।', nav: 'विमान दृश्य' }
+            },
+            lion_well: {
+                en: { title: 'Lion Well (Simhakinaru)', desc: 'The famous lion-faced well entrance, said to be used by the King to pour heavy Ganges water.', nav: 'Lion Well' },
+                ta: { title: 'சிம்ம கிணறு', desc: 'புகழ்பெற்ற சிங்க முகம் கொண்ட கிணறு நுழைவாயில், கங்கை நீரை ஊற்ற மன்னரால் பயன்படுத்தப்பட்டதாக கூறப்படுகிறது.', nav: 'சிம்ம கிணறு' },
+                kn: { title: 'ಸಿಂಹ ಬಾವಿ (ಸಿಂಹಕಿನಾರು)', desc: 'ಪ್ರಸಿದ್ಧ ಸಿಂಹದ ಮುಖದ ಬಾವಿ ಪ್ರವೇಶದ್ವಾರ, ರಾಜನು ಗಂಗಾ ನೀರನ್ನು ಸುರಿಯಲು ಬಳಸುತ್ತಿದ್ದನೆಂದು ಹೇಳಲಾಗುತ್ತದೆ.', nav: 'ಸಿಂಹ ಬಾವಿ' },
+                hi: { title: 'सिम्हकिनारु (शेर कुआं)', desc: 'प्रसिद्ध शेरमुख कुआं प्रवेश द्वार, कहा जाता है कि राजा इसका उपयोग गंगा का पानी डालने के लिए करते थे।', nav: 'शेर कुआं' }
+            },
+            mandapam: {
+                en: { title: 'Mahamandapam', desc: 'The pillared hall with intricate Chola sculptures and artworks adorning the walls.', nav: 'Mahamandapam' },
+                ta: { title: 'மகா மண்டபம்', desc: 'சுவர்களில் சிக்கலான சோழர் சிற்பங்கள் மற்றும் கலைப்படைப்புகளுடன் கூடிய தூண்கள் கொண்ட மண்டபம்.', nav: 'மகா மண்டபம்' },
+                kn: { title: 'ಮಹಾಮಂಟಪ', desc: 'ಗೋಡೆಗಳನ್ನು ಅಲಂಕರಿಸುವ ಸಂಕೀರ್ಣವಾದ ಚೋಳ ಶಿಲ್ಪಗಳು ಮತ್ತು ಕಲಾಕೃತಿಗಳನ್ನು ಹೊಂದಿರುವ ಕಂಬದ ಮಂಟಪ.', nav: 'ಮಹಾಮಂಟಪ' },
+                hi: { title: 'महामंडप', desc: 'दीवारों को सुशोभित करने वाली जटिल चोल मूर्तियों और कलाकृति वाला स्तंभ हॉल।', nav: 'महामंडप' }
+            }
+        };
+
+        function updateAudioButton() {
+            if (audioState === 'playing') {
+                audioBtn.textContent = '🔊 Audio Enabled';
+                audioBtn.style.background = '#ff8c00';
+            } else {
+                audioBtn.textContent = '🔇 Audio Disabled';
+                audioBtn.style.background = 'white';
+                audioBtn.style.color = '#ff8c00';
+            }
+        }
+
+        function playLocationAudio(locationId) {
+            // Stop any current audio or speech
+            window.speechSynthesis.cancel();
+            document.querySelectorAll('audio').forEach(a => {
+                a.pause();
+                a.currentTime = 0;
+            });
+
+            const lang = document.getElementById('language-switcher').value;
+            const audio = document.getElementById(`${locationId}-audio`);
+
+            if (audio) {
+                // Try to play file: audio/entrance_en.mp3
+                const filename = `audio/${locationId}_${lang}.mp3`;
+                audio.src = filename;
+
+                // We attempt to load and play
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log(`Playing audio file: ${filename}`);
+                        audioState = 'playing';
+                        updateAudioButton();
+
+                        audio.onended = () => {
+                            audioState = 'paused';
+                            updateAudioButton();
+                        };
+                    }).catch(error => {
+                        console.warn(`File ${filename} not found or blocked. Falling back to TTS.`);
+                        speakDescription(locationId, lang);
+                    });
+                }
+            } else {
+                speakDescription(locationId, lang);
+            }
+        }
+
+        function playOnlineTTS(text, lang) {
+            console.log(`Attempting Online TTS for ${lang}...`);
+            // Using a CORS proxy or direct call if allowed (often works for simple GETs from browser)
+            const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(text)}`;
+            const audio = new Audio(url);
+
+            audio.play().then(() => {
+                audioState = 'playing';
+                updateAudioButton();
+                audio.onended = () => {
+                    audioState = 'paused';
+                    updateAudioButton();
+                };
+            }).catch(e => {
+                console.warn('Online TTS failed', e);
+                // Last resort: force browser to try its best
+                speakDescription(currentActiveLocation, lang, true);
+            });
+        }
+
+        function speakDescription(locationId, lang, forceBrowser = false) {
+            if (!translations[locationId]) return;
+
+            // If it's Tamil or Kannada, and we aren't forcing browser, try online TTS first
+            // because Windows often lacks these voices by default.
+            if (!forceBrowser && (lang === 'ta' || lang === 'kn')) {
+                const text = translations[locationId][lang].desc;
+                playOnlineTTS(text, lang);
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+
+            const text = translations[locationId][lang].desc;
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            let voices = window.speechSynthesis.getVoices();
+
+            if (voices.length === 0 && !forceBrowser) {
+                setTimeout(() => speakDescription(locationId, lang, forceBrowser), 100);
+                return;
+            }
+
+            const langMap = {
+                en: 'en',
+                ta: 'ta',
+                kn: 'kn',
+                hi: 'hi'
+            };
+
+            const targetLangShort = langMap[lang] || 'en';
+            let selectedVoice = voices.find(v => v.lang.toLowerCase().includes(targetLangShort));
+
+            const googleVoice = voices.find(v => v.lang.toLowerCase().includes(targetLangShort) && v.name.includes('Google'));
+            if (googleVoice) selectedVoice = googleVoice;
+
+            if (selectedVoice) {
+                console.log(`Using voice for ${lang}: ${selectedVoice.name}`);
+                utterance.voice = selectedVoice;
+                utterance.lang = selectedVoice.lang;
+            } else {
+                console.warn(`No specific voice found for ${lang}. Trying fallback.`);
+                utterance.lang = targetLangShort === 'en' ? 'en-US' : (targetLangShort + '-IN');
+            }
+
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+
+            utterance.onstart = () => {
+                audioState = 'playing';
+                updateAudioButton();
+            };
+
+            utterance.onend = () => {
+                audioState = 'paused';
+                updateAudioButton();
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function toggleAudio() {
+            if (audioState === 'playing') {
+                window.speechSynthesis.cancel();
+                document.querySelectorAll('audio').forEach(a => a.pause());
+                audioState = 'paused';
+            } else {
+                playLocationAudio(currentActiveLocation);
+            }
+            updateAudioButton();
+        }
+
+        audioBtn.addEventListener('click', toggleAudio);
+
+        document.getElementById('start-vr-btn').addEventListener('click', () => {
+            document.getElementById('vr-splash').style.display = 'none';
+            currentActiveLocation = 'entrance';
+            audioContextLoaded = true;
+            playLocationAudio('entrance');
+        });
+
+        document.getElementById('language-switcher').addEventListener('change', function () {
+            const lang = this.value;
+            Object.keys(translations).forEach(id => {
+                const label = document.getElementById(`${id}-label`);
+                if (label) {
+                    label.querySelector('.label-title').textContent = translations[id][lang].title;
+                    label.querySelector('.label-desc').textContent = translations[id][lang].desc;
+                }
+                const navBtn = document.getElementById(`btn-${id}`);
+                if (navBtn) navBtn.textContent = translations[id][lang].nav;
+            });
+            if (audioState === 'playing') playLocationAudio(currentActiveLocation);
+        });
+
+        function goTo(place) {
+            const locations = {
+                entrance: { lat: 11.2063126, lng: 79.4497293, heading: 271.15 },
+                main_shrine: { lat: 11.2065967, lng: 79.448591, heading: 0 },
+                vimana_view: { lat: 11.2063765, lng: 79.4480341, heading: 0 },
+                lion_well: { lat: 11.206582, lng: 79.4491841, heading: 0 },
+                mandapam: { lat: 11.2066977, lng: 79.4488482, heading: 0 }
+            };
+            const target = locations[place];
+            const svService = new google.maps.StreetViewService();
+            svService.getPanorama({ location: target, radius: 50 }, (data, status) => {
+                if (status === 'OK') {
+                    panorama.setPano(data.location.pano);
+                    panorama.setPov({ heading: target.heading, pitch: 0, zoom: 1 });
+                    currentActiveLocation = place;
+                }
+            });
+        }
+
+        function initPanorama() {
+            const spots = [
+                { id: "entrance", location: { lat: 11.2063126, lng: 79.4497293 }, heading: 271.15 },
+                { id: "main_shrine", location: { lat: 11.2065967, lng: 79.448591 }, heading: 0 },
+                { id: "vimana_view", location: { lat: 11.2063765, lng: 79.4480341 }, heading: 0 },
+                { id: "lion_well", location: { lat: 11.206582, lng: 79.4491841 }, heading: 0 },
+                { id: "mandapam", location: { lat: 11.2066977, lng: 79.4488482 }, heading: 0 }
+            ];
+
+            const svService = new google.maps.StreetViewService();
+            // Increased radius to 200m to be safer
+            svService.getPanorama({ location: spots[0].location, radius: 200 }, (data, status) => {
+                if (status === "OK") {
+                    panorama = new google.maps.StreetViewPanorama(document.getElementById("street-view"), {
+                        pano: data.location.pano,
+                        pov: { heading: spots[0].heading, pitch: 0 },
+                        visible: true,
+                        addressControl: false,
+                        fullscreenControl: false // Custom button used
+                    });
+
+                    panorama.addListener("pov_changed", () => {
+                        const pov = panorama.getPov();
+                        const pos = panorama.getPosition();
+                        if (!pos) return;
+                        let newActiveLocation = null;
+
+                        spots.forEach(spot => {
+                            let headingDiff = Math.abs((pov.heading % 360 + 360) % 360 - spot.heading);
+                            if (headingDiff > 180) headingDiff = 360 - headingDiff;
+
+                            const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                                pos, new google.maps.LatLng(spot.location.lat, spot.location.lng)
+                            );
+
+                            const isVisible = distance <= 40 && headingDiff <= 45;
+                            document.getElementById(`${spot.id}-label`).style.display = isVisible ? "block" : "none";
+                            if (isVisible) newActiveLocation = spot.id;
+                        });
+
+                        if (newActiveLocation && newActiveLocation !== currentActiveLocation) {
+                            currentActiveLocation = newActiveLocation;
+                            if (audioState === 'playing') {
+                                playLocationAudio(newActiveLocation);
+                            }
+                        }
+                    });
+                    panoramaReady = true;
+                } else {
+                    console.error("Street View data not found for init location. Status:", status);
+                    alert("Street View data not found for this location. Please check your internet connection or API key.");
+                }
+            });
+        }
+
+        // Fullscreen Logic
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Also handle escape key to update button text if needed (optional)
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('fullscreen-btn');
+            if (document.fullscreenElement) {
+                btn.innerHTML = '⛶ Exit Fullscreen';
+            } else {
+                btn.innerHTML = '⛶ Fullscreen';
+            }
+        });
+    </script>
+</body>
+
+</html>

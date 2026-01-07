@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking - Tamil Nadu | Premium Hotel Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="colorful.css">
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=places"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>
+                    <span class="hotel-icon">🏨</span>
+                    Hotel Booking
+                    <span class="brand-accent">Tamil Nadu</span>
+                </h1>
+                <p class="subtitle">Discover premium hotels across Tamil Nadu with our advanced search platform</p>
+            </div>
+        </header>
+
+        <div class="search-section">
+            <div class="search-header">
+                <h2>Find Your Perfect Stay</h2>
+                <p>Search for hotels in any Tamil Nadu city</p>
+            </div>
+            <div class="search-box">
+                <div class="input-wrapper">
+                    <span class="input-icon">📍</span>
+                    <input type="text" id="searchInput" placeholder="Enter city name (e.g., Salem, Chennai, Coimbatore)"
+                        autocomplete="off">
+                </div>
+                <button id="searchBtn" onclick="searchHotels()">
+                    <span>Search</span>
+                    <span class="btn-icon">🔍</span>
+                </button>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="keywordInput">Filter by Keyword</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🏷️</span>
+                        <input type="text" id="keywordInput" placeholder="e.g., luxury, budget, beachfront"
+                            class="filter-input">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="radiusSelect">Search Radius</label>
+                    <select id="radiusSelect" class="filter-input">
+                        <option value="5000">5 km</option>
+                        <option value="10000" selected>10 km</option>
+                        <option value="20000">20 km</option>
+                        <option value="50000">50 km</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching for hotels...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="locationInfo" class="location-info" style="display: none;">
+            <div class="location-badge">
+                <span class="location-icon">📍</span>
+                <div class="location-text">
+                    <span class="location-label">Searching in</span>
+                    <span id="currentLocation" class="location-name"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="results"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

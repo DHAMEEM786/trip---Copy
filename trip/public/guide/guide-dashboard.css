@@ -1,0 +1,80 @@
+/* Guide Dashboard Specific Styles */
+
+.dashboard-container {
+    max-width: 800px;
+    margin: 4rem auto;
+    padding: 0 1rem;
+}
+
+.login-section {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.booking-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.booking-info h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.booking-meta {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.booking-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.booking-contact {
+    text-align: right;
+}
+
+.booking-contact a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* Dashboard Responsive Styles */
+@media (max-width: 768px) {
+    .booking-card {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .booking-contact {
+        text-align: left;
+        margin-top: 0.5rem;
+        width: 100%;
+    }
+
+    .booking-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}

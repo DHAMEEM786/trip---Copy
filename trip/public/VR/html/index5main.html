@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Brihadeeswarar Temple - Nandi Sculpture Label</title>
+  <link rel="stylesheet" href="indexdup.css">
+
+</head>
+
+<body>
+  <div id="vr-splash">
+    <div class="splash-content">
+      <h1>Experience TN Verse</h1>
+      <p>Enter the immersive virtual tour of Brihadeeswarar Temple. Audio guide will start automatically.</p>
+      <button id="start-vr-btn">Begin Virtual Tour</button>
+    </div>
+  </div>
+
+  <div class="top-controls">
+    <select id="language-switcher">
+      <option value="en">English</option>
+      <option value="ta">தமிழ்</option>
+      <option value="kn">ಕನ್ನಡ</option>
+      <option value="hi">हिन्दी</option>
+    </select>
+    <button id="audio-control-btn">🔊 Audio Enabled</button>
+    <button id="fullscreen-btn">Fullscreen</button>
+  </div>
+  <div id="location-buttons">
+    <button onclick="goTo('nandi')" id="btn-nandi">Nandi</button>
+    <button onclick="goTo('dwarapalaka')" id="btn-dwarapalaka">Dwarapalaka</button>
+    <button onclick="goTo('lingam')" id="btn-lingam">Lingam</button>
+  </div>
+  <div id="street-view"></div>
+  <!-- Sculpture Labels -->
+  <div class="custom-label" id="nandi-label">
+    <span class="label-title">Nandi - Sacred Bull</span>
+    <div class="label-desc">Monolithic sculpture, 16th century. Carved from a single stone and weighing 25 tons.</div>
+  </div>
+  <div class="custom-label" id="dwarapalaka-label">
+    <span class="label-title">Dwarapalaka - Guardian Deity</span>
+    <div class="label-desc">As you enter, you see the massive Dwarapalakas, the guardian deities signifying protection.
+    </div>
+  </div>
+  <div class="custom-label" id="lingam-label">
+    <span class="label-title">Shiva Lingam</span>
+    <div class="label-desc">This is the main deity, the Shiva Lingam. It stands as a symbol of cosmic power.</div>
+  </div>
+
+  <!-- Audio elements with preload -->
+  <!-- Audio elements with preload -->
+  <audio id="nandi-audio" src="audio/nandhi.mp3" preload="auto"></audio>
+  <audio id="dwarapalaka-audio" src="audio/dwarapalaka.mp3" preload="auto"></audio>
+  <audio id="lingam-audio" src="audio/shiva_lingam.mp3" preload="auto"></audio>
+
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=geometry&callback=initPanorama"
+    async defer></script>
+
+  <script>
+    let panorama = null;
+    let panoramaReady = false;
+    let audioContextLoaded = false;
+    let currentActiveLocation = null;
+    const audioBtn = document.getElementById('audio-control-btn');
+    let audioState = 'paused';
+
+    function updateAudioButton() {
+      if (audioState === 'playing') {
+        audioBtn.textContent = '🔊 Audio Enabled';
+        audioBtn.style.background = '#ff8c00';
+        audioBtn.style.color = 'white';
+      } else if (audioState === 'paused') {
+        audioBtn.textContent = '🔇 Audio Disabled';
+        audioBtn.style.background = 'white';
+        audioBtn.style.color = '#ff8c00';
+      } else if (audioState === 'ended') {
+        audioBtn.textContent = '🔁 Repeat Audio';
+        audioBtn.style.background = '#ff8c00';
+        audioBtn.style.color = 'white';
+      }
+    }
+
+    function toggleAudio() {
+      const audio = document.getElementById(`${currentActiveLocation}-audio`);
+      if (!audio) return;
+
+      if (audioState === 'playing') {
+        audio.pause();
+        audioState = 'paused';
+      } else if (audioState === 'paused') {
+        audio.play();
+        audioState = 'playing';
+      } else if (audioState === 'ended') {
+        audio.currentTime = 0;
+        audio.play();
+        audioState = 'playing';
+      }
+      updateAudioButton();
+    }
+
+    audioBtn.addEventListener('click', toggleAudio);
+
+    function playLocationAudio(locationId) {
+      document.querySelectorAll('audio').forEach(a => {
+        a.pause();
+        a.currentTime = 0;
+        a.onended = null;
+      });
+
+      const audio = document.getElementById(`${locationId}-audio`);
+      if (audio) {
+        audio.onended = () => {
+          audioState = 'ended';
+          updateAudioButton();
+        };
+
+        audio.play().then(() => {
+          audioState = 'playing';
+          updateAudioButton();
+        }).catch(err => {
+          console.warn("Autoplay blocked or audio error:", err);
+          audioState = 'paused';
+          updateAudioButton();
+        });
+      }
+    }
+
+    document.getElementById('start-vr-btn').addEventListener('click', () => {
+      document.getElementById('vr-splash').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('vr-splash').style.display = 'none';
+      }, 800);
+
+      currentActiveLocation = 'nandi';
+      audioContextLoaded = true;
+      playLocationAudio('nandi');
+    });
+
+    document.getElementById('language-switcher').addEventListener('change', function () {
+      const lang = this.value;
+      const translations = {
+        nandi: {
+          en: { title: 'Nandi - Sacred Bull', desc: 'Monolithic sculpture, 16th century. Carved from a single stone and weighing 25 tons.', nav: 'Nandi' },
+          ta: { title: 'நந்தி சிலை', desc: 'ஒரே கல்லில் செதுக்கப்பட்டு 25 டன் எடையுள்ள நந்தி, கருவறையை நோக்குகிறார்.', nav: 'நந்தி' },
+          kn: { title: 'ನಂದಿ ವಿಗ್ರಹ', desc: 'ಒಂದೇ ಕಲ್ಲಿನಿಂದ ಕೆತ್ತಲ್ಪಟ್ಟ ಮತ್ತು 25 ಟನ್ ತೂಕದ ನಂದಿಯು ಗರ್ಭಗುಡಿಯನ್ನು ನೋಡುತ್ತಿದೆ.', nav: 'ನಂದಿ' },
+          hi: { title: 'नंदी', desc: 'एक ही पत्थर से नक्काशीदार और 25 टन वजन का, नंदी गर्भगृह की ओर देखता है।', nav: 'नंदी' }
+        },
+        dwarapalaka: {
+          en: { title: 'Dwarapalaka - Guardian Deity', desc: 'As you enter, you see the massive Dwarapalakas, the guardian deities signifying protection.', nav: 'Dwarapalaka' },
+          ta: { title: 'துவாரபாலகர்', desc: 'நீங்கள் உள்ளே நுழையும்போது, பிரமாண்டமான துவாரபாலகர்களைக் காண்கிறீர்கள். அவர்கள் பாதுகாப்பைக் குறிக்கிறார்கள்.', nav: 'துவாரபாலகர்' },
+          kn: { title: 'ದ್ವಾರಪಾಲಕ', desc: 'ನೀವು ಪ್ರವೇಶಿಸಿದಂತೆ, ರಕ್ಷಕ ದೇವತೆಗಳಾದ ಬೃಹತ್ ದ್ವಾರಪಾಲಕರನ್ನು ನೀವು ನೋಡುತ್ತೀರಿ.', nav: 'ದ್ವಾರಪಾಲಕ' },
+          hi: { title: 'द्वारपालका', desc: 'जैसे ही आप प्रवेश करते हैं, आप विशाल द्वारपालों को देखते हैं, जो पवित्र स्थान की सुरक्षा करते हैं।', nav: 'द्वारपालका' }
+        },
+        lingam: {
+          en: { title: 'Shiva Lingam', desc: 'This is the main deity, the Shiva Lingam. It stands as a symbol of cosmic power.', nav: 'Shiva Lingam' },
+          ta: { title: 'லிங்கம்', desc: 'இது முக்கிய தெய்வம், சிவலிங்கம். இது பிரபஞ்ச சக்தியின் அடையாளமாகத் திகழ்கிறது.', nav: 'லிங்கம்' },
+          kn: { title: 'ಶಿವಲಿಂಗ', desc: 'ಇದು ಮುಖ್ಯ ದೇವತೆ, ಶಿವಲಿಂಗ. ಇದು ಕಾಸ್ಮಿಕ್ ಶಕ್ತಿಯ ಸಂಕೇತವಾಗಿ ನಿಂತಿದೆ.', nav: 'ಶಿವಲಿಂಗ' },
+          hi: { title: 'शिव लिंगम', desc: 'यह मुख्य देवता, शिव लिंगम है। यह ब्रह्मांडीय शक्ति के प्रतीक के रूप में खड़ा है।', nav: 'शिव लिंगम' }
+        }
+      };
+
+      Object.keys(translations).forEach(id => {
+        const label = document.getElementById(`${id}-label`);
+        if (label) {
+          label.querySelector('.label-title').textContent = translations[id][lang].title;
+          label.querySelector('.label-desc').textContent = translations[id][lang].desc;
+        }
+        const navBtn = document.getElementById(`btn-${id}`);
+        if (navBtn) navBtn.textContent = translations[id][lang].nav;
+      });
+
+      // Update audio sources to audio/ folder
+      document.querySelectorAll('audio').forEach(audio => {
+        const baseId = audio.id.split('-')[0];
+        const audioPath = baseId === 'nandi' ? 'nandhi' :
+          baseId === 'dwarapalaka' ? 'dwarapalaka' :
+            'shiva_lingam';
+        audio.src = `audio/${audioPath}${lang === 'en' ? '' : '_' + lang}.mp3`;
+        audio.load();
+        console.log(`Loading audio: ${audio.src}`);
+      });
+
+      if (audioState === 'playing') playLocationAudio(currentActiveLocation);
+    });
+
+    function goTo(place) {
+      if (!panoramaReady) {
+        alert("Please wait while Street View loads...");
+        return;
+      }
+      try {
+        const svService = new google.maps.StreetViewService();
+        const locations = {
+          nandi: { lat: 10.782972, lng: 79.132250, heading: 270 },
+          dwarapalaka: { lat: 10.782829, lng: 79.131980, heading: 273 },
+          lingam: { lat: 10.782473, lng: 79.131742, heading: 272 }
+        };
+
+        const target = locations[place] || locations.nandi;
+
+        svService.getPanorama({ location: target, radius: 50 }, (data, status) => {
+          if (status === 'OK') {
+            panorama.setPov({ heading: target.heading, pitch: 0, zoom: 1 });
+            panorama.setPano(data.location.pano);
+          }
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function initPanorama() {
+      const sculptures = [
+        { id: "nandi", location: { lat: 10.782972, lng: 79.132250 }, heading: 270, pitch: 0 },
+        { id: "dwarapalaka", location: { lat: 10.782829, lng: 79.131980 }, heading: 273, pitch: 0 },
+        { id: "lingam", location: { lat: 10.782473, lng: 79.131742 }, heading: 272, pitch: 0 }
+      ];
+
+      const visibleRange = 15;
+      const distanceThreshold = 10;
+
+      const svService = new google.maps.StreetViewService();
+      svService.getPanorama({ location: sculptures[0].location, radius: 30 }, (data, status) => {
+        if (status === "OK") {
+          panorama = new google.maps.StreetViewPanorama(document.getElementById("street-view"), {
+            pano: data.location.pano,
+            pov: { heading: 250, pitch: 0 },
+            visible: true,
+            addressControl: false,
+            linksControl: true,
+            fullscreenControl: false
+          });
+
+          sculptures.forEach(sculpture => {
+            sculpture.labelEl = document.getElementById(`${sculpture.id}-label`);
+          });
+
+          panorama.addListener("pov_changed", () => {
+            const pov = panorama.getPov();
+            const pos = panorama.getPosition();
+            let newActiveLocation = null;
+
+            sculptures.forEach(sculpture => {
+              const headingDiff = Math.abs(pov.heading - sculpture.heading);
+              const pitchDiff = Math.abs(pov.pitch - sculpture.pitch);
+              const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                pos,
+                new google.maps.LatLng(sculpture.location.lat, sculpture.location.lng)
+              );
+
+              const isVisible = headingDiff <= visibleRange && pitchDiff <= visibleRange && distance <= distanceThreshold;
+              sculpture.labelEl.style.display = isVisible ? "block" : "none";
+              if (isVisible) newActiveLocation = sculpture.id;
+            });
+
+            if (newActiveLocation && newActiveLocation !== currentActiveLocation) {
+              currentActiveLocation = newActiveLocation;
+              if (audioContextLoaded) playLocationAudio(newActiveLocation);
+            }
+          });
+          panoramaReady = true;
+        } else {
+          console.error("Street View failed:", status);
+          document.getElementById('street-view').innerHTML = `
+            <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fffaf5; color: #ff8c00; font-family: sans-serif; text-align: center; padding: 20px;">
+              <h2 style="font-size: 2.5rem; margin-bottom: 20px;">Virtual View Unavailable</h2>
+              <p style="font-size: 1.2rem; color: #666; max-width: 600px;">
+                We're having trouble loading the Street View for this location.
+              </p>
+              <div style="margin-top:30px; padding:15px; background:white; border: 2px solid #ff8c00; border-radius:12px;">
+                <strong>Error Status:</strong> ${status}
+              </div>
+            </div>`;
+        }
+      });
+    }
+
+    document.getElementById('fullscreen-btn').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    const checkReady = setInterval(() => {
+      if (panoramaReady) {
+        document.querySelectorAll('#location-buttons button').forEach(btn => btn.disabled = false);
+        clearInterval(checkReady);
+      }
+    }, 500);
+  </script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=geometry&callback=initPanorama"
+    async defer></script>
+</body>
+
+</html>

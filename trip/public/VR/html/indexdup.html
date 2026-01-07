@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Brihadeeswarar Temple - Virtual Reality Tour</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #street-view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .top-settings-wrapper {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 1002;
+    }
+
+    .settings-capsule {
+      background: white;
+      padding: 6px 10px;
+      border-radius: 50px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid rgba(255, 140, 0, 0.1);
+    }
+
+    .settings-capsule select,
+    .settings-capsule button {
+      background: white;
+      color: #ff8c00;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+      outline: none;
+    }
+
+    #audio-control-btn {
+      background: #ff8c00 !important;
+      color: white !important;
+      min-width: 140px;
+    }
+
+    #fullscreen-btn {
+      background: #ff8c00 !important;
+      color: white !important;
+      border: 1px solid #ff8c00;
+    }
+
+    #fullscreen-btn:hover,
+    #audio-control-btn:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    #language-switcher:hover {
+      background: #fff5e6;
+    }
+
+    .top-nav-wrapper {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      z-index: 1002;
+      display: flex;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    #location-buttons {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #location-buttons button {
+      background: rgba(255, 255, 255, 0.95);
+      color: #ff8c00;
+      border: 2.5px solid #ff8c00;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s;
+      font-size: 13px;
+      min-width: 140px;
+    }
+
+    #location-buttons button:hover {
+      background: #ff8c00;
+      color: white;
+      transform: scale(1.03);
+      box-shadow: 0 6px 18px rgba(255, 140, 0, 0.3);
+    }
+
+    #vr-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: opacity 0.8s ease;
+    }
+
+    .splash-content h1 {
+      color: #ff8c00;
+      font-size: 2.5rem;
+    }
+
+    #start-vr-btn {
+      padding: 15px 40px;
+      background: #ff8c00;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(255, 140, 0, 0.3);
+    }
+
+    .custom-label {
+      position: absolute;
+      background: white;
+      color: #333;
+      padding: 16px 24px;
+      font-size: 18px;
+      border-radius: 16px;
+      transform: translate(-50%, -50%);
+      top: 50%;
+      left: 50%;
+      z-index: 1001;
+      display: none;
+      pointer-events: none;
+      border: 3px solid #ff8c00;
+      box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
+      text-align: center;
+      min-width: 250px;
+      max-width: 400px;
+    }
+
+    .custom-label .label-title {
+      color: #ff8c00;
+      font-weight: 800;
+      font-size: 22px;
+      display: block;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="vr-splash">
+    <div class="splash-content">
+      <h1>Experience Tanjore VR</h1>
+      <p>Enter the immersive virtual tour of Brihadeeswarar Temple. Audio guide will start automatically.</p>
+      <button id="start-vr-btn">Begin Virtual Tour</button>
+    </div>
+  </div>
+
+  <div class="top-nav-wrapper">
+    <div id="location-buttons">
+      <button onclick="goTo('entrance')" id="btn-entrance">Entrance</button>
+      <button onclick="goTo('courtyard')" id="btn-courtyard">First Courtyard</button>
+      <button onclick="goTo('nandi')" id="btn-nandi">Nandi</button>
+      <button onclick="goTo('dwarapalaka')" id="btn-dwarapalaka">Garbhagriha</button>
+      <button onclick="goTo('lingam')" id="btn-lingam">Vimana</button>
+    </div>
+  </div>
+
+  <div class="top-settings-wrapper">
+    <div class="settings-capsule">
+      <select id="language-switcher">
+        <option value="en">English</option>
+        <option value="ta">தமிழ்</option>
+        <option value="kn">ಕನ್ನಡ</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <button id="audio-control-btn">🔊 Audio Enabled</button>
+      <button id="fullscreen-btn">⛶ Fullscreen</button>
+    </div>
+  </div>
+
+  <div id="street-view"></div>
+  <!-- Sculpture Labels -->
+  <div class="custom-label" id="courtyard-label">
+    <span class="label-title">First courtyard</span>
+    <div class="label-desc">Welcome to the Brihadeeswarar Temple, or Thanjai Periya Kovil. Built over 1000 years ago by
+      Raja Raja Chola I,
+      this grand temple greets you with its elegant entrance tower.</div>
+  </div>
+  <div class="custom-label" id="entrance-label">
+    <span class="label-title">ENTRANCE</span>
+    <div class="label-desc">As you walk in, you enter a vast granite courtyard. Amazingly, there's no granite nearby —
+      imagine the planning
+      it took to bring every stone here.</div>
+  </div>
+  <div class="custom-label" id="nandi-label">
+    <span class="label-title">NANDHI SCULPTURE</span>
+    <div class="label-desc">Ahead stands a giant statue of Nandi, Lord Shiva’s bull. Carved from a single stone and
+      weighing 25 tons, Nandi
+      gazes at the sanctum with timeless devotion.</div>
+  </div>
+  <div class="custom-label" id="dwarapalaka-label">
+    <span class="label-title">Garbhagriha</span>
+    <div class="label-desc">You’re in the heart of the temple — the Garbhagriha. Here, a 13-foot tall Shiva Lingam glows
+      softly under oil
+      lamps. The silence, the chill — it's pure spiritual energy.</div>
+  </div>
+  <div class="custom-label" id="lingam-label">
+    <span class="label-title">VIMANA</span>
+    <div class="label-desc">Look up! The Vimana rises over 66 meters high. Its top stone, the ‘Kumbam’, weighs 80 tons —
+      placed there using
+      just a ramp and elephants.</div>
+  </div>
+
+  <!-- Audio elements with preload -->
+  <audio id="entrance-audio" src="audio/into t.mp3" preload="auto"></audio>
+  <audio id="courtyard-audio" src="audio/first courtyard.mp3" preload="auto"></audio>
+  <audio id="nandi-audio" src="audio/nandhi.mp3" preload="auto"></audio>
+  <audio id="dwarapalaka-audio" src="audio/garbagarha.mp3" preload="auto"></audio>
+  <audio id="lingam-audio" src="audio/vimana.mp3" preload="auto"></audio>
+
+
+
+
+  <script>
+    let panorama = null;
+    let panoramaReady = false;
+    let audioContextLoaded = false;
+    let currentActiveLocation = null;
+    const audioBtn = document.getElementById('audio-control-btn');
+
+    // unified audio state: 'playing', 'paused', 'ended'
+    let audioState = 'paused';
+
+    function updateAudioButton() {
+      if (audioState === 'playing') {
+        audioBtn.textContent = '🔊 Audio Enabled';
+        audioBtn.style.background = '#ff8c00';
+        audioBtn.style.color = 'white';
+      } else {
+        audioBtn.textContent = '🔇 Audio Disabled';
+        audioBtn.style.background = 'white';
+        audioBtn.style.color = '#ff8c00';
+      }
+    }
+
+    function toggleAudio() {
+      if (audioState === 'playing') {
+        window.speechSynthesis.cancel();
+        document.querySelectorAll('audio').forEach(a => a.pause());
+        audioState = 'paused';
+      } else {
+        playLocationAudio(currentActiveLocation);
+      }
+      updateAudioButton();
+    }
+
+    audioBtn.addEventListener('click', toggleAudio);
+
+    function playLocationAudio(locationId) {
+      window.speechSynthesis.cancel();
+      document.querySelectorAll('audio').forEach(a => {
+        a.pause();
+        a.currentTime = 0;
+      });
+
+      const lang = document.getElementById('language-switcher').value;
+      const audio = document.getElementById(`${locationId}-audio`);
+
+      if (audio) {
+        // Construct path based on language
+        const baseId = locationId === 'nandi' ? 'nandhi' :
+          locationId === 'entrance' ? 'into t' :
+            locationId === 'courtyard' ? 'first courtyard' :
+              locationId === 'dwarapalaka' ? 'garbagarha' : 'vimana';
+
+        audio.src = `audio/${audioPath(locationId)}${lang === 'en' ? '' : '_' + lang}.mp3`;
+        audio.load();
+
+        audio.play().then(() => {
+          audioState = 'playing';
+          updateAudioButton();
+        }).catch(err => {
+          console.warn("Audio file missing, falling back to TTS:", err);
+          speakDescription(locationId, lang);
+        });
+      } else {
+        speakDescription(locationId, lang);
+      }
+    }
+
+    function audioPath(id) {
+      const map = {
+        nandi: 'nandhi',
+        entrance: 'into t',
+        courtyard: 'first courtyard',
+        dwarapalaka: 'garbagarha',
+        lingam: 'vimana'
+      };
+      return map[id] || id;
+    }
+
+    function speakDescription(locationId, lang) {
+      const translations = getTranslations();
+      if (!translations[locationId] || !translations[locationId][lang]) return;
+
+      window.speechSynthesis.cancel();
+      const text = translations[locationId][lang].desc;
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      const langMap = {
+        en: ['en-IN', 'en-US'],
+        ta: ['ta-IN'],
+        kn: ['kn-IN'],
+        hi: ['hi-IN']
+      };
+
+      const voices = window.speechSynthesis.getVoices();
+      const targetLangs = langMap[lang] || ['en-US'];
+      const selectedVoice = voices.find(v => targetLangs.some(l => v.lang.startsWith(l)));
+
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.lang = targetLangs[0];
+      utterance.rate = 0.9;
+
+      utterance.onstart = () => {
+        audioState = 'playing';
+        updateAudioButton();
+      };
+      utterance.onend = () => {
+        audioState = 'paused';
+        updateAudioButton();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function getTranslations() {
+      return {
+        nandi: {
+          en: { title: 'NANDHI SCULPTURE', desc: 'Ahead stands a giant statue of Nandi, Lord Shiva’s bull. Carved from a single stone and weighing 25 tons, Nandi gazes at the sanctum with timeless devotion.', nav: 'Nandi' },
+          ta: { title: 'நந்தி சிலை', desc: 'முன்னால் நந்தி சிலையின் பிரம்மாண்டமான சிலை உள்ளது, இது சிவபெருமானின் வாகனம். ஒரே கல்லில் செதுக்கப்பட்டு 25 டன் எடையுள்ள நந்தி, கருவறையை நோக்குகிறார்.', nav: 'நந்தி' },
+          kn: { title: 'ನಂದಿ ವಿಗ್ರಹ', desc: 'ಮುಂದೆ ಶಿವನ ನಂದಿಯ ಬೃಹತ್ ಮೂರ್ತಿ ಇದೆ. ಒಂದೇ ಕಲ್ಲಿನಿಂದ ಕೆತ್ತಲ್ಪಟ್ಟ ಮತ್ತು 25 ಟನ್ ತೂಕದ ನಂದಿಯು ಶಾಶ್ವತ ಭಕ್ತಿಯಿಂದ ಗರ್ಭಗುಡಿಯನ್ನು ನೋಡುತ್ತಿದೆ.', nav: 'ನಂದಿ' },
+          hi: { title: 'नंदी', desc: 'आगे नंदी की एक विशाल मूर्ति खड़ी है, जो भगवान शिव का बैल है। एक ही पत्थर से नक्काशीदार और 25 टन वजन का, नंदी शाश्वत भक्ति के साथ गर्भगृह की ओर देखता है।', nav: 'नंदी' }
+        },
+        dwarapalaka: {
+          en: { title: 'Garbhagriha', desc: 'You’re in the heart of the temple — the Garbhagriha. Here, a 13-foot tall Shiva Lingam glows softly under oil lamps. The silence, the chill — it\'s pure spiritual energy.', nav: 'Garbhagriha' },
+          ta: { title: 'கருவறை', desc: 'நீங்கள் கோவிலின் மையப்பகுதியில் இருக்கிறீர்கள் - அதுதான் கருவறை. இங்கே, 13 அடி உயரமுள்ள சிவலிங்கம் அகல் விளக்குகளின் கீழ் மென்மையாக ஒளிர்கிறது.', nav: 'கருவறை' },
+          kn: { title: 'ಗರ್ಭಗುಡಿ', desc: 'ನೀವು ದೇವಸ್ಥಾನದ ಹೃದಯಭಾಗದಲ್ಲಿದ್ದೀರಿ - ಗರ್ಭಗುಡಿ. ಇಲ್ಲಿ, 13 ಅಡಿ ಎತ್ತರದ ಶಿವಲಿಂಗವು ದೀಪಗಳ ಕೆಳಗೆ ಮೃದುವಾಗಿ ಹೊಳೆಯುತ್ತದೆ.', nav: 'ಗರ್ಭಗುಡಿ' },
+          hi: { title: 'गर्भगृह', desc: 'आप मंदिर के केंद्र में हैं - गर्भगृह। यहाँ, एक 13 फुट लंबा शिव लिंगम मिट्टी के दीपकों के नीचे धीरे से चमकता है।', nav: 'गर्भगृह' }
+        },
+        lingam: {
+          en: { title: 'Vimana', desc: 'Look up! The Vimana rises over 66 meters high. Its top stone, the ‘Kumbam’, weighs 80 tons — placed there using just a ramp and elephants.', nav: 'Vimana' },
+          ta: { title: 'விமானம்', desc: 'மேலே பாருங்கள்! विमानம் 66 மீட்டருக்கும் அதிகமான உயரத்திற்கு உயர்ந்துள்ளது. அதன் உச்சியில் உள்ள கல், 80 டன் எடையுள்ளது.', nav: 'விமானம்' },
+          kn: { title: 'ವಿಮಾನ', desc: 'ಮೇಲಕ್ಕೆ ನೋಡಿ! ವಿಮಾನವು 66 ಮೀಟರ್‌ಗಳಿಗಿಂತ ಹೆಚ್ಚು ಎತ್ತರದಲ್ಲಿದೆ. ಇದರ ಮೇಲಿನ ಕಲ್ಲು 80 ಟನ್ ತೂಗುತ್ತದೆ.', nav: 'ವಿಮಾನ' },
+          hi: { title: 'विमना', desc: 'ऊपर देखें! विमान 66 मीटर से अधिक ऊँचा है। इसकी ऊपरी पत्थर का वजन 80 टन है।', nav: 'विमना' }
+        },
+        entrance: {
+          en: { title: 'Entrance', desc: 'As you walk in, you enter a vast granite courtyard. Amazingly, there\'s no granite nearby — imagine the planning it took to bring every stone here.', nav: 'Entrance' },
+          ta: { title: 'நுழைவாயில்', desc: 'நீங்கள் உள்ளே நுழையும்போது, ஒரு பிரம்மாண்டமான கிரானைட் முற்றத்திற்குள் நுழைகிறீர்கள். ஆச்சரியமாக, அருகில் எங்கும் கிரானைட் இல்லை.', nav: 'நுழைவாயில்' },
+          kn: { title: 'ಪ್ರವೇಶ ದ್ವಾರ', desc: 'ನೀವು ಒಳಗೆ ನಡೆದಂತೆ, ನೀವು ವಿಶಾಲವಾದ ಗ್ರಾನೈಟ್ ಅಂಗಳವನ್ನು ಪ್ರವೇಶಿಸುತ್ತೀರಿ. ಆಶ್ಚರ್ಯಕರವಾಗಿ, ಹತ್ತಿರದಲ್ಲಿ ಯಾವುದೇ ಗ್ರಾನೈಟ್ ಇಲ್ಲ.', nav: 'ಪ್ರವೇಶ ದ್ವಾರ' },
+          hi: { title: 'प्रवेश द्वार', desc: 'जैसे ही आप अंदर चलते हैं, आप एक विशाल ग्रेनाइट आंगन में प्रवेश करते हैं। आश्चर्यजनक रूप से, पास में कोई ग्रेनाइट नहीं है।', nav: 'प्रवेश द्वार' }
+        },
+        courtyard: {
+          en: { title: 'First Courtyard', desc: 'Welcome to the Brihadeeswarar Temple, or Thanjai Periya Kovil. Built over 1000 years ago by Raja Raja Chola I, this grand temple greets you with its elegant entrance tower.', nav: 'First Courtyard' },
+          ta: { title: 'முதல் முற்றம்', desc: 'பிரகதீஸ்வரர் கோவில் அல்லது தஞ்சை பெரிய கோவிலுக்கு உங்களை வரவேற்கிறோம். 1000 ஆண்டுகளுக்கு முன்பு முதலாம் ராஜ ராஜ சோழனால் கட்டப்பட்டது.', nav: 'முதல் முற்றம்' },
+          kn: { title: 'ಮೊದಲ ಅಂಗಳ', desc: 'ಬೃಹದೀಶ್ವರ ದೇವಸ್ಥಾನ ಅಥವಾ ತಂಜೈ ಪೆರಿಯಾ ಕೋವಿಲ್‌ಗೆ ಸುಸ್ವಾಗತ. 1000 ವರ್ಷಗಳ ಹಿಂದೆ ಮೊದಲ ರಾಜ ರಾಜ ಚೋಳನಿಂದ ನಿರ್ಮಿಸಲ್ಪಟ್ಟಿದೆ.', nav: 'ಮೊದಲ ಅಂಗಳ' },
+          hi: { title: 'प्रथम आंगन', desc: 'बृहदेश्वर मंदिर, या तंजई पेरिया कोविल में आपका स्वागत है। 1000 साल पहले राजा राजा चोल प्रथम द्वारा निर्मित।', nav: 'प्रथम आंगन' }
+        }
+      };
+    }
+
+    // Handle Splash Screen and Start
+    document.getElementById('start-vr-btn').addEventListener('click', () => {
+      try {
+        const splash = document.getElementById('vr-splash');
+        if (splash) {
+          splash.style.opacity = '0';
+          setTimeout(() => {
+            splash.style.display = 'none';
+          }, 800);
+        }
+
+        currentActiveLocation = 'entrance';
+        audioContextLoaded = true;
+
+        // Use a short timeout to ensure UI updates before heavy lifting
+        setTimeout(() => {
+          playLocationAudio('entrance');
+        }, 100);
+
+      } catch (e) {
+        console.error("Error starting VR:", e);
+        // Force hide splash if error occurs
+        document.getElementById('vr-splash').style.display = 'none';
+      }
+    });
+
+    document.getElementById('language-switcher').addEventListener('change', function () {
+      const lang = this.value;
+      const trans = getTranslations();
+
+      Object.keys(trans).forEach(id => {
+        const label = document.getElementById(`${id}-label`);
+        if (label) {
+          label.querySelector('.label-title').textContent = trans[id][lang].title;
+          label.querySelector('.label-desc').textContent = trans[id][lang].desc;
+        }
+        const navBtn = document.getElementById(`btn-${id}`);
+        if (navBtn) navBtn.textContent = trans[id][lang].nav;
+      });
+
+      if (audioState === 'playing') playLocationAudio(currentActiveLocation);
+    });
+
+    function initPanorama() {
+      const locations = [
+        { id: 'entrance', location: { lat: 10.782800, lng: 79.134200 }, heading: 270 },
+        { id: 'courtyard', location: { lat: 10.783170, lng: 79.132842 }, heading: 271 },
+        { id: 'nandi', location: { lat: 10.782972, lng: 79.132250 }, heading: 274 },
+        { id: 'dwarapalaka', location: { lat: 10.782829, lng: 79.131980 }, heading: 273 },
+        { id: 'lingam', location: { lat: 10.782473, lng: 79.131742 }, heading: 272 }
+      ];
+
+      const svService = new google.maps.StreetViewService();
+      // Initialize with Entrance - Increased radius to 100m
+      svService.getPanorama({ location: locations[0].location, radius: 100 }, (data, status) => {
+        if (status === 'OK') {
+          panorama = new google.maps.StreetViewPanorama(document.getElementById('street-view'), {
+            pano: data.location.pano,
+            pov: { heading: locations[0].heading, pitch: 0 },
+            visible: true,
+            addressControl: false,
+            linksControl: true,
+            showRoadLabels: false,
+            fullscreenControl: false // Custom button
+          });
+
+          panorama.addListener('pov_changed', () => {
+            const pov = panorama.getPov();
+            const pos = panorama.getPosition();
+            let bestLoc = null;
+            let minDistance = Infinity;
+
+            locations.forEach(loc => {
+              if (google.maps.geometry) {
+                const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                  pos, new google.maps.LatLng(loc.location.lat, loc.location.lng)
+                );
+
+                const headingDiff = Math.abs((pov.heading % 360) - loc.heading);
+                const isLookingAt = headingDiff <= 35 || (360 - headingDiff) <= 35;
+                const isClose = distance <= 25;
+
+                const label = document.getElementById(loc.id + '-label');
+                if (label) {
+                  label.style.display = (isClose && isLookingAt) ? 'block' : 'none';
+                }
+
+                if (distance < minDistance) {
+                  minDistance = distance;
+                  bestLoc = loc.id;
+                }
+              }
+            });
+
+            if (minDistance <= 25 && bestLoc && bestLoc !== currentActiveLocation) {
+              currentActiveLocation = bestLoc;
+              if (audioContextLoaded && audioState === 'playing') {
+                playLocationAudio(bestLoc);
+              }
+            }
+          });
+
+          panoramaReady = true;
+        } else {
+          console.error("Street View data not found for init location");
+        }
+      });
+    }
+
+    function goTo(place) {
+      const locations = {
+        entrance: { lat: 10.782800, lng: 79.134200, heading: 270 },
+        courtyard: { lat: 10.783170, lng: 79.132842, heading: 271 },
+        nandi: { lat: 10.782972, lng: 79.132250, heading: 274 },
+        dwarapalaka: { lat: 10.782829, lng: 79.131980, heading: 273 },
+        lingam: { lat: 10.782473, lng: 79.131742, heading: 272 }
+      };
+      const target = locations[place];
+      if (!panoramaReady) return;
+
+      const svService = new google.maps.StreetViewService();
+      // Increased radius to 100m here too
+      svService.getPanorama({ location: target, radius: 100 }, (data, status) => {
+        if (status === 'OK') {
+          panorama.setPano(data.location.pano);
+          panorama.setPov({ heading: target.heading, pitch: 0, zoom: 1 });
+        }
+      });
+    }
+
+    document.getElementById('fullscreen-btn').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      const btn = document.getElementById('fullscreen-btn');
+      if (document.fullscreenElement) {
+        btn.innerHTML = '⛶ Exit Fullscreen';
+      } else {
+        btn.innerHTML = '⛶ Fullscreen';
+      }
+    });
+  </script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=geometry&callback=initPanorama"
+    async defer></script>
+</body>
+
+</html>

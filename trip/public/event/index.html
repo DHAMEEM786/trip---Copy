@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibrant Voyages | Premium Events</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Poppins:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header class="hero">
+        <h1>Unforgettable <br> <span>Experiences</span></h1>
+        <p>Curated events and hidden gems in Tamil Nadu's most vibrant cities.</p>
+
+        <div class="search-container">
+            <input type="text" id="city-search" placeholder="Search city (e.g., Chennai, Madurai)...">
+            <button id="search-btn">Explore</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="filter-container">
+            <button class="filter-btn active" data-category="all">All</button>
+            <button class="filter-btn" data-category="festival">Festivals</button>
+            <button class="filter-btn" data-category="music">Music</button>
+            <button class="filter-btn" data-category="culture">Culture</button>
+            <button class="filter-btn" data-category="nightlife">Nightlife</button>
+        </div>
+
+        <div class="section-header">
+            <h2 class="section-title">Trending in <span id="city-name">Tamil Nadu</span></h2>
+        </div>
+
+        <div class="gallery-grid" id="gallery">
+            <!-- Cards will be injected via script.js -->
+        </div>
+
+        <div id="loading" class="hidden">
+            <div class="loader"></div>
+        </div>
+        <div id="error-message" class="hidden"></div>
+    </main>
+
+    <!-- Detailed Modal -->
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <div class="close-modal">&times;</div>
+            <div class="modal-image-col">
+                <img id="modal-image" src="" alt="Event Image">
+            </div>
+            <div class="modal-info-col">
+                <h2 id="modal-title">Event Title</h2>
+                <div class="modal-meta">
+                    <span id="modal-rating"><i class="fa-solid fa-star"></i> 4.5</span>
+                    <span id="modal-category"><i class="fa-solid fa-tag"></i> Category</span>
+                </div>
+                <p id="modal-address"><i class="fa-solid fa-location-dot"></i> <span>Address</span></p>
+                <div class="tags" id="modal-tags">
+                    <!-- Tags -->
+                </div>
+                <p id="modal-description">Description goes here...</p>
+
+                <a href="#" id="maps-link" target="_blank" class="btn-primary">
+                    <i class="fa-solid fa-map-location-dot"></i> View Location
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATew-TdTHzI9IZjizM8dOJxMBXPB6LRfE&libraries=places"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
