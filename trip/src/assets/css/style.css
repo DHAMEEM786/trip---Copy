@@ -827,7 +827,11 @@ body {
         cursor: pointer;
         padding: 0;
         z-index: 10000;
-        margin-right: 10px;
+        margin-right: 15px;
+    }
+
+    .desktop-auth-buttons {
+        display: none !important;
     }
 
     .hamburger-bar {
@@ -859,6 +863,10 @@ body {
 
     .tn-nav-brand {
         font-size: 1.2rem !important;
+    }
+
+    .language-dropdown-wrapper {
+        margin-right: 10px;
     }
 }
 
