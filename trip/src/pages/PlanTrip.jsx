@@ -180,13 +180,16 @@ const PlanTrip = () => {
             **Format:**
             1. **Quick Summary**: 2-3 lines about the trip.
             2. **Daily Plan**:
+               (Use ## Day X for headers)
                - **Morning**: [Top 1-2 activities]
                - **Lunch**: [1 suggestion]
                - **Afternoon**: [1-2 activities]
                - **Evening**: [Best spot for dinner/relaxing]
-            3. **Short Tips**: 2-3 helpful points for transport or packing.
-            
-            Use H2 (##) for Day headers and Markdown for lists.
+            3. **Logistics & Packing Essentials**:
+               - Mention best way to travel between spots.
+               - 2-3 essential items to pack for the weather.
+
+            Use H2 (##) for Day headers.
             `;
 
             if (dailySummaries.length > 0) {
@@ -252,11 +255,11 @@ const PlanTrip = () => {
             const currentContent = rawMarkdown;
             const dayNum = selectedDayToReplan;
 
-            // Regex to find ## Day X and everything until the next ## Day Y or 3. **Short Tips**
-            const dayRegex = new RegExp(`## Day ${dayNum}[\\s\\S]*?(?=(## Day ${parseInt(dayNum) + 1}|3\\. \\*\\*Short Tips\\*\\*|$))`, 'i');
+            // Regex to find ## Day X and stop at ## Day Y OR 3. **Logistics & Packing Essentials**
+            const dayRegex = new RegExp(`## Day ${dayNum}[\\s\\S]*?(?=(## Day ${parseInt(dayNum) + 1}|3\\. \\*\\*Logistics & Packing Essentials\\*\\*|$))`, 'i');
 
             if (!dayRegex.test(currentContent)) {
-                throw new Error(`Could not locate section for Day ${dayNum} in the current plan.`);
+                throw new Error(`Could not locate section for Day ${dayNum} in your itinerary. Please ensure it follows the standard format.`);
             }
 
             const updatedMarkdown = currentContent.replace(dayRegex, newDayContent + "\n\n");
