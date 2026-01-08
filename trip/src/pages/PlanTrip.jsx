@@ -34,7 +34,40 @@ const PlanTrip = () => {
         return days;
     };
 
-    const sendToGemini = async (prompt, weatherInfo = "") => {
+    const getWeatherIcon = (desc) => {
+        const d = desc.toLowerCase();
+        if (d.includes('clear')) return 'fa-sun';
+        if (d.includes('cloud')) return 'fa-cloud';
+        if (d.includes('rain')) return 'fa-cloud-rain';
+        if (d.includes('snow')) return 'fa-snowflake';
+        if (d.includes('thunder')) return 'fa-bolt';
+        if (d.includes('mist') || d.includes('fog')) return 'fa-smog';
+        return 'fa-cloud-sun';
+    };
+
+    const renderWeatherSection = (summaries, cityName) => {
+        if (!summaries || summaries.length === 0) return "";
+
+        const cards = summaries.map(s => `
+            <div class="weather-card">
+                <span class="date">Day ${s.day}</span>
+                <i class="fa-solid ${getWeatherIcon(s.desc)} weather-icon"></i>
+                <span class="temp">${Math.round(s.temp)}°C</span>
+                <span class="desc">${s.desc}</span>
+            </div>
+        `).join('');
+
+        return `
+            <div class="weather-section">
+                <h3><i class="fa-solid fa-cloud-sun"></i> Weather Forecast for ${cityName}</h3>
+                <div class="weather-grid">
+                    ${cards}
+                </div>
+            </div>
+        `;
+    };
+
+    const sendToGemini = async (prompt, weatherUI = "") => {
         try {
             const res = await fetch("/api/gemini", {
                 method: "POST",
@@ -45,8 +78,7 @@ const PlanTrip = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            const fullContent =
-                (weatherInfo ? weatherInfo + "\n---\n" : "") + data.text;
+            const fullContent = (weatherUI ? weatherUI : "") + data.text;
 
             const htmlContent = marked.parse(fullContent);
             setOutputHtml(htmlContent);
@@ -110,7 +142,7 @@ const PlanTrip = () => {
                         const desc = f.weather[0].description;
                         const temp = f.main.temp;
                         weatherInfo += `- **${d.toDateString()}**: ${desc}, ${temp}°C\n`;
-                        dailySummaries.push({ day: i + 1, desc, temp });
+                        dailySummaries.push({ day: i + 1, desc, temp, date: d.toDateString() });
                     }
                 });
             } else {
@@ -149,7 +181,9 @@ const PlanTrip = () => {
             5. Format in clean Markdown. Use H2 (##) for Day headers.
             `;
 
-            await sendToGemini(prompt, weatherInfo);
+            const weatherUI = dailySummaries.length > 0 ? renderWeatherSection(dailySummaries, city) : "";
+
+            await sendToGemini(prompt, weatherUI);
 
         } catch (err) {
             console.error(err);

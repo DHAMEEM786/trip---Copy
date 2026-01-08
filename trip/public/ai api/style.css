@@ -360,6 +360,77 @@ select:focus {
   font-weight: 800;
 }
 
+/* Weather Section Styling */
+.weather-section {
+  margin-bottom: 3rem;
+  background: #f8fafc;
+  padding: 2rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+}
+
+.weather-section h3 {
+  margin-top: 0 !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.weather-card {
+  background: white;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weather-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-primary);
+}
+
+.weather-card .date {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weather-icon {
+  font-size: 2rem;
+  color: var(--accent-primary);
+  margin: 0.5rem 0;
+}
+
+.weather-card .temp {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+}
+
+.weather-card .desc {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
 .output-area blockquote {
   border-left: 6px solid var(--accent-primary);
   background: var(--accent-soft);
