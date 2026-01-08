@@ -55,7 +55,10 @@ body {
   display: flex;
   flex-direction: column;
   padding: 2.5rem;
-  overflow-y: visible;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 80px);
   flex-shrink: 0;
   z-index: 10;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.02);
@@ -207,6 +210,26 @@ select:focus {
 
 .generate-btn:active {
   transform: translateY(0);
+}
+
+/* Replan Section */
+.replan-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Main Content Area */
