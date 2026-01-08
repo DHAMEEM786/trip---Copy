@@ -13,8 +13,20 @@ const PlanTrip = () => {
     const WEATHER_KEY = import.meta.env.WEATHER_API_KEY;
 
     const [loading, setLoading] = useState(false);
+    const [loadingMsg, setLoadingMsg] = useState('');
+    const [outputHtml, setOutputHtml] = useState(null);
+    const [showDownload, setShowDownload] = useState(false);
     const [itinerary, setItinerary] = useState(null);
     const [refiningIndex, setRefiningIndex] = useState(null); // {dayIndex, activityIndex}
+
+    // Form State
+    const [city, setCity] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [travelType, setTravelType] = useState('family');
+    const [budget, setBudget] = useState('moderate');
+    const [placeType, setPlaceType] = useState('mixed');
+    const [customPrompt, setCustomPrompt] = useState('');
 
     const getDaysInRange = (start, end) => {
         const s = new Date(start),
@@ -161,6 +173,11 @@ const PlanTrip = () => {
             setRefiningIndex(null);
         }
     };
+
+    const renderMarkdown = (text) => {
+        if (!text) return "";
+        return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    }
 
     const downloadPDF = () => {
         const element = document.getElementById("output");
@@ -341,8 +358,7 @@ const PlanTrip = () => {
                                                 return (
                                                     <div key={aIdx} className={`activity-card ${isRefining ? 'refining' : ''}`}>
                                                         <div className="activity-time">{act.time}</div>
-                                                        <div className="activity-content">
-                                                            {act.activity}
+                                                        <div className="activity-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(act.activity) }}>
                                                         </div>
                                                         <div className="activity-edit">
                                                             <button
