@@ -49,22 +49,20 @@ const PlanTrip = () => {
         if (!summaries || summaries.length === 0) return "";
 
         const cards = summaries.map(s => `
-            <div class="weather-card">
-                <span class="date">Day ${s.day}</span>
-                <i class="fa-solid ${getWeatherIcon(s.desc)} weather-icon"></i>
-                <span class="temp">${Math.round(s.temp)}°C</span>
-                <span class="desc">${s.desc}</span>
-            </div>
-        `).join('');
+<div class="weather-card">
+    <span class="date">Day ${s.day}</span>
+    <i class="fa-solid ${getWeatherIcon(s.desc)} weather-icon"></i>
+    <span class="temp">${Math.round(s.temp)}°C</span>
+    <span class="desc">${s.desc}</span>
+</div>`).join('');
 
         return `
-            <div class="weather-section">
-                <h3><i class="fa-solid fa-cloud-sun"></i> Weather Forecast for ${cityName}</h3>
-                <div class="weather-grid">
-                    ${cards}
-                </div>
-            </div>
-        `;
+<div class="weather-section">
+    <h3><i class="fa-solid fa-cloud-sun"></i> Weather Forecast for ${cityName}</h3>
+    <div class="weather-grid">
+        ${cards}
+    </div>
+</div>`;
     };
 
     const sendToGemini = async (prompt, weatherUI = "") => {
@@ -78,9 +76,7 @@ const PlanTrip = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            const fullContent = (weatherUI ? weatherUI : "") + data.text;
-
-            const htmlContent = marked.parse(fullContent);
+            const htmlContent = (weatherUI || "") + marked.parse(data.text);
             setOutputHtml(htmlContent);
             setShowDownload(true);
         } catch (e) {
