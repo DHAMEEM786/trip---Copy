@@ -42,7 +42,6 @@ body {
 .app-container {
     display: flex;
     min-height: calc(100vh - 80px);
-    /* Adjusting for navbar height */
     width: 100vw;
     background: var(--bg-app);
 }

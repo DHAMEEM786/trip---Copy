@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePageTitle, usePageStyle, useScript } from '../hooks';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const PlanTrip = () => {
     usePageTitle('Tamil Nadu Travel Planner AI');
@@ -213,200 +215,204 @@ const PlanTrip = () => {
     };
 
     return (
-        <div className="app-container">
-            <aside className="sidebar">
-                <div className="brand">
-                    <i className="fa-solid fa-route"></i>
-                    <h1>TN.AI Planner</h1>
-                </div>
-
-                <div className="controls">
-                    <div className="control-group">
-                        <label htmlFor="cityInput"><i className="fa-solid fa-city"></i> Destination</label>
-                        <input
-                            type="text"
-                            id="cityInput"
-                            placeholder="Where do you want to go?"
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                        />
+        <div style={{ paddingTop: '80px' }}>
+            <Navbar />
+            <div className="app-container">
+                <aside className="sidebar">
+                    <div className="brand">
+                        <i className="fa-solid fa-route"></i>
+                        <h1>TN.AI Planner</h1>
                     </div>
 
-                    <div className="control-row">
+                    <div className="controls">
                         <div className="control-group">
-                            <label htmlFor="startDate"><i className="fa-regular fa-calendar"></i> Start</label>
+                            <label htmlFor="cityInput"><i className="fa-solid fa-city"></i> Destination</label>
                             <input
-                                type="date"
-                                id="startDate"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
+                                type="text"
+                                id="cityInput"
+                                placeholder="Where do you want to go?"
+                                value={city}
+                                onChange={(e) => setCity(e.target.value)}
                             />
                         </div>
+
+                        <div className="control-row">
+                            <div className="control-group">
+                                <label htmlFor="startDate"><i className="fa-regular fa-calendar"></i> Start</label>
+                                <input
+                                    type="date"
+                                    id="startDate"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="control-group">
+                                <label htmlFor="endDate"><i className="fa-regular fa-calendar-check"></i> End</label>
+                                <input
+                                    type="date"
+                                    id="endDate"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
                         <div className="control-group">
-                            <label htmlFor="endDate"><i className="fa-regular fa-calendar-check"></i> End</label>
-                            <input
-                                type="date"
-                                id="endDate"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
+                            <label>Travelers</label>
+                            <div className="select-grid" id="travelTypeOptions">
+                                {['solo', 'partner', 'family', 'friends'].map(type => (
+                                    <button
+                                        key={type}
+                                        className={`select-btn ${travelType === type ? 'active' : ''}`}
+                                        onClick={() => setTravelType(type)}
+                                    >
+                                        <i className={`fa-solid ${type === 'solo' ? 'fa-person' : type === 'partner' ? 'fa-heart' : type === 'family' ? 'fa-users' : 'fa-user-group'}`}></i> {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="control-group">
-                        <label>Travelers</label>
-                        <div className="select-grid" id="travelTypeOptions">
-                            {['solo', 'partner', 'family', 'friends'].map(type => (
-                                <button
-                                    key={type}
-                                    className={`select-btn ${travelType === type ? 'active' : ''}`}
-                                    onClick={() => setTravelType(type)}
-                                >
-                                    <i className={`fa-solid ${type === 'solo' ? 'fa-person' : type === 'partner' ? 'fa-heart' : type === 'family' ? 'fa-users' : 'fa-user-group'}`}></i> {type.charAt(0).toUpperCase() + type.slice(1)}
+                        <div className="control-group">
+                            <label>Budget</label>
+                            <div className="select-grid" id="budgetOptions">
+                                {[
+                                    { val: 'cheap', label: 'Budget', icon: '$' },
+                                    { val: 'moderate', label: 'Standard', icon: '$$' },
+                                    { val: 'luxury', label: 'Luxury', icon: '$$$' }
+                                ].map(item => (
+                                    <button
+                                        key={item.val}
+                                        className={`select-btn ${budget === item.val ? 'active' : ''}`}
+                                        onClick={() => setBudget(item.val)}
+                                    >
+                                        <span>{item.icon}</span> {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="control-group">
+                            <label>Interests</label>
+                            <div className="select-grid" id="placeTypeOptions">
+                                {[
+                                    { val: 'mixed', label: 'Mixed' },
+                                    { val: 'adventure', label: 'Adventure' },
+                                    { val: 'waterfall', label: 'Nature' },
+                                    { val: 'temple', label: 'Heritage' }
+                                ].map(item => (
+                                    <button
+                                        key={item.val}
+                                        className={`select-btn ${placeType === item.val ? 'active' : ''}`}
+                                        onClick={() => setPlaceType(item.val)}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="control-group">
+                            <label htmlFor="customPrompt">Custom Requests</label>
+                            <textarea
+                                id="customPrompt"
+                                rows="3"
+                                placeholder="Specific requirements? (e.g., wheelchair access, vegan food)"
+                                value={customPrompt}
+                                onChange={(e) => setCustomPrompt(e.target.value)}
+                            ></textarea>
+                        </div>
+
+                        <button onClick={generatePlan} className="generate-btn">
+                            <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
+                        </button>
+                    </div>
+                </aside>
+
+                <main className="main-content">
+                    <div className="result-header">
+                        <h2>Your Itinerary</h2>
+                        <div className="actions">
+                            {showDownload && itinerary && (
+                                <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
+                                    <i className="fa-solid fa-file-pdf"></i> Download PDF
                                 </button>
-                            ))}
+                            )}
                         </div>
                     </div>
 
-                    <div className="control-group">
-                        <label>Budget</label>
-                        <div className="select-grid" id="budgetOptions">
-                            {[
-                                { val: 'cheap', label: 'Budget', icon: '$' },
-                                { val: 'moderate', label: 'Standard', icon: '$$' },
-                                { val: 'luxury', label: 'Luxury', icon: '$$$' }
-                            ].map(item => (
-                                <button
-                                    key={item.val}
-                                    className={`select-btn ${budget === item.val ? 'active' : ''}`}
-                                    onClick={() => setBudget(item.val)}
-                                >
-                                    <span>{item.icon}</span> {item.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                    <div id="output" className="output-area">
+                        {loading ? (
+                            <div className="loading">
+                                <i className="fa-solid fa-circle-notch"></i>
+                                <p>{loadingMsg}</p>
+                            </div>
+                        ) : (
+                            itinerary ? (
+                                <div className="itinerary-json-view">
+                                    <div className="itinerary-summary">
+                                        <p>{itinerary.summary}</p>
+                                    </div>
 
-                    <div className="control-group">
-                        <label>Interests</label>
-                        <div className="select-grid" id="placeTypeOptions">
-                            {[
-                                { val: 'mixed', label: 'Mixed' },
-                                { val: 'adventure', label: 'Adventure' },
-                                { val: 'waterfall', label: 'Nature' },
-                                { val: 'temple', label: 'Heritage' }
-                            ].map(item => (
-                                <button
-                                    key={item.val}
-                                    className={`select-btn ${placeType === item.val ? 'active' : ''}`}
-                                    onClick={() => setPlaceType(item.val)}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="control-group">
-                        <label htmlFor="customPrompt">Custom Requests</label>
-                        <textarea
-                            id="customPrompt"
-                            rows="3"
-                            placeholder="Specific requirements? (e.g., wheelchair access, vegan food)"
-                            value={customPrompt}
-                            onChange={(e) => setCustomPrompt(e.target.value)}
-                        ></textarea>
-                    </div>
-
-                    <button onClick={generatePlan} className="generate-btn">
-                        <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
-                    </button>
-                </div>
-            </aside>
-
-            <main className="main-content">
-                <div className="result-header">
-                    <h2>Your Itinerary</h2>
-                    <div className="actions">
-                        {showDownload && itinerary && (
-                            <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
-                                <i className="fa-solid fa-file-pdf"></i> Download PDF
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                <div id="output" className="output-area">
-                    {loading ? (
-                        <div className="loading">
-                            <i className="fa-solid fa-circle-notch"></i>
-                            <p>{loadingMsg}</p>
-                        </div>
-                    ) : (
-                        itinerary ? (
-                            <div className="itinerary-json-view">
-                                <div className="itinerary-summary">
-                                    <p>{itinerary.summary}</p>
-                                </div>
-
-                                {itinerary.days.map((day, dIdx) => (
-                                    <div key={dIdx} className="itinerary-day">
-                                        <h3>Day {day.day}</h3>
-                                        <div className="activities-grid">
-                                            {day.activities.map((act, aIdx) => {
-                                                const isRefining = refiningIndex?.dayIdx === dIdx && refiningIndex?.actIdx === aIdx;
-                                                return (
-                                                    <div key={aIdx} className={`activity-card ${isRefining ? 'refining' : ''}`}>
-                                                        <div className="activity-time">{act.time}</div>
-                                                        <div className="activity-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(act.activity) }}>
-                                                        </div>
-                                                        <div className="activity-edit">
-                                                            <button
-                                                                className="refine-btn"
-                                                                onClick={() => {
-                                                                    const feedback = prompt(`What would you like to change about this ${act.time} activity?`, act.activity);
-                                                                    if (feedback && feedback !== act.activity) {
-                                                                        handleRefineActivity(dIdx, aIdx, feedback);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <i className="fa-solid fa-pen-to-square"></i> Refine
-                                                            </button>
-                                                        </div>
-                                                        {isRefining && (
-                                                            <div className="card-loader">
-                                                                <i className="fa-solid fa-circle-notch fa-spin"></i> Refining...
+                                    {itinerary.days.map((day, dIdx) => (
+                                        <div key={dIdx} className="itinerary-day">
+                                            <h3>Day {day.day}</h3>
+                                            <div className="activities-grid">
+                                                {day.activities.map((act, aIdx) => {
+                                                    const isRefining = refiningIndex?.dayIdx === dIdx && refiningIndex?.actIdx === aIdx;
+                                                    return (
+                                                        <div key={aIdx} className={`activity-card ${isRefining ? 'refining' : ''}`}>
+                                                            <div className="activity-time">{act.time}</div>
+                                                            <div className="activity-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(act.activity) }}>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
+                                                            <div className="activity-edit">
+                                                                <button
+                                                                    className="refine-btn"
+                                                                    onClick={() => {
+                                                                        const feedback = prompt(`What would you like to change about this ${act.time} activity?`, act.activity);
+                                                                        if (feedback && feedback !== act.activity) {
+                                                                            handleRefineActivity(dIdx, aIdx, feedback);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <i className="fa-solid fa-pen-to-square"></i> Refine
+                                                                </button>
+                                                            </div>
+                                                            {isRefining && (
+                                                                <div className="card-loader">
+                                                                    <i className="fa-solid fa-circle-notch fa-spin"></i> Refining...
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    <div className="itinerary-footer-info">
+                                        <div className="info-section">
+                                            <h4><i className="fa-solid fa-truck-ramp-box"></i> Logistics</h4>
+                                            <p>{itinerary.logistics}</p>
+                                        </div>
+                                        <div className="info-section">
+                                            <h4><i className="fa-solid fa-suitcase"></i> Packing Essentials</h4>
+                                            <p>{itinerary.packing}</p>
                                         </div>
                                     </div>
-                                ))}
-
-                                <div className="itinerary-footer-info">
-                                    <div className="info-section">
-                                        <h4><i className="fa-solid fa-truck-ramp-box"></i> Logistics</h4>
-                                        <p>{itinerary.logistics}</p>
-                                    </div>
-                                    <div className="info-section">
-                                        <h4><i className="fa-solid fa-suitcase"></i> Packing Essentials</h4>
-                                        <p>{itinerary.packing}</p>
-                                    </div>
                                 </div>
-                            </div>
-                        ) : outputHtml ? (
-                            <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>
-                        ) : (
-                            <div className="placeholder-state">
-                                <i className="fa-solid fa-map-location-dot"></i>
-                                <p>Enter your trip details to generate a personalized AI travel plan.</p>
-                            </div>
-                        )
-                    )}
-                </div>
-            </main>
+                            ) : outputHtml ? (
+                                <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>
+                            ) : (
+                                <div className="placeholder-state">
+                                    <i className="fa-solid fa-map-location-dot"></i>
+                                    <p>Enter your trip details to generate a personalized AI travel plan.</p>
+                                </div>
+                            )
+                        )}
+                    </div>
+                </main>
+            </div>
+            <Footer />
         </div>
     );
 };
