@@ -208,29 +208,75 @@ const PlanTrip = () => {
         if (!rawMarkdown) return;
 
         setLoading(true);
-        setLoadingMsg(`Updating Day ${selectedDayToReplan}...`);
+        setLoadingMsg(`Replanning Day ${selectedDayToReplan}...`);
 
         try {
-            const prompt = `I have this travel itinerary:
+            const prompt = `I have this travel itinerary for ${city}:
             
             ${rawMarkdown}
             
-            Please rewrite ONLY **Day ${selectedDayToReplan}** with different activities/suggestions based on this feedback:
-            ${replanFeedback || "Give me something different and interesting."}
+            Please rewrite ONLY the content for **Day ${selectedDayToReplan}** based on this feedback:
+            ${replanFeedback || "Suggest different local experiences or hidden gems."}
             
-            **CRITICAL REQUIREMENTS:**
-            1. Use the same short, simple Indian English style.
-            2. Keep the structure (Morning, Lunch, Afternoon, Evening) exactly the same.
-            3. **RETURN THE ENTIRE UPDATED ITINERARY.** Do not just return the changed day.
-            4. Keep all other days (Day 1, 2, etc.) EXACTLY as they are. Do not change a single word in other days.
-            5. Keep the "Quick Summary" and "Short Tips" sections exactly as they are.
-            6. Return only the final updated Markdown.
+            **Format to return (START DIRECTLY WITH THE HEADER):**
+            ## Day ${selectedDayToReplan}
+            - **Morning**: ...
+            - **Lunch**: ...
+            - **Afternoon**: ...
+            - **Evening**: ...
+            
+            **CRITICAL:**
+            - Return ONLY the markdown for Day ${selectedDayToReplan}.
+            - DO NOT return the full itinerary.
+            - DO NOT return any "Here is your plan" or concluding text. 
+            - Use the same simple Indian English style.
             `;
 
-            await sendToGemini(prompt);
-            setReplanFeedback(''); // Clear feedback after successful replan
+            const res = await fetch("/api/gemini", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Gemini error");
+
+            const newDayContent = data.text.trim();
+
+            // Surgical Swap logic
+            let currentContent = rawMarkdown;
+            const dayHeader = `## Day ${selectedDayToReplan}`;
+            const nextDayHeader = `## Day ${parseInt(selectedDayToReplan) + 1}`;
+            const tipsHeader = `3. **Short Tips**`;
+
+            let startIndex = currentContent.indexOf(dayHeader);
+            if (startIndex === -1) {
+                throw new Error("Could not find the specific day section to update in the current plan.");
+            }
+
+            // Find where this day section ends
+            let endIndex = currentContent.indexOf(nextDayHeader, startIndex + dayHeader.length);
+            if (endIndex === -1) {
+                endIndex = currentContent.indexOf(tipsHeader, startIndex + dayHeader.length);
+            }
+            if (endIndex === -1) {
+                endIndex = currentContent.length;
+            }
+
+            const updatedMarkdown =
+                currentContent.substring(0, startIndex).trim() +
+                "\n\n" +
+                newDayContent +
+                "\n\n" +
+                currentContent.substring(endIndex).trim();
+
+            setRawMarkdown(updatedMarkdown);
+            setOutputHtml(marked.parse(updatedMarkdown));
+            setReplanFeedback('');
+
         } catch (err) {
             console.error("Replan error:", err);
+            // Optionally inform the user
         } finally {
             setLoading(false);
         }
