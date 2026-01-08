@@ -15,9 +15,12 @@ const PlanTrip = () => {
     const [loading, setLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('');
     const [outputHtml, setOutputHtml] = useState(null);
+    const [rawMarkdown, setRawMarkdown] = useState('');
     const [weatherData, setWeatherData] = useState(null);
     const [weatherCity, setWeatherCity] = useState('');
     const [showDownload, setShowDownload] = useState(false);
+    const [selectedDayToReplan, setSelectedDayToReplan] = useState('1');
+    const [replanFeedback, setReplanFeedback] = useState('');
 
     // Form State
     const [city, setCity] = useState('');
@@ -78,6 +81,7 @@ const PlanTrip = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
+            setRawMarkdown(data.text);
             const htmlContent = marked.parse(data.text);
             setOutputHtml(htmlContent);
             setShowDownload(true);
@@ -200,6 +204,38 @@ const PlanTrip = () => {
         }
     };
 
+    const replanDay = async () => {
+        if (!rawMarkdown) return;
+
+        setLoading(true);
+        setLoadingMsg(`Updating Day ${selectedDayToReplan}...`);
+
+        try {
+            const prompt = `I have this travel itinerary:
+            
+            ${rawMarkdown}
+            
+            Please rewrite ONLY **Day ${selectedDayToReplan}** with different activities/suggestions based on this feedback:
+            ${replanFeedback || "Give me something different and interesting."}
+            
+            **CRITICAL REQUIREMENTS:**
+            1. Use the same short, simple Indian English style.
+            2. Keep the structure (Morning, Lunch, Afternoon, Evening) exactly the same.
+            3. **RETURN THE ENTIRE UPDATED ITINERARY.** Do not just return the changed day.
+            4. Keep all other days (Day 1, 2, etc.) EXACTLY as they are. Do not change a single word in other days.
+            5. Keep the "Quick Summary" and "Short Tips" sections exactly as they are.
+            6. Return only the final updated Markdown.
+            `;
+
+            await sendToGemini(prompt);
+            setReplanFeedback(''); // Clear feedback after successful replan
+        } catch (err) {
+            console.error("Replan error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const downloadPDF = () => {
         const element = document.getElementById("output");
         const cityName = city || "Itinerary";
@@ -255,20 +291,28 @@ const PlanTrip = () => {
                     {outputHtml && (
                         <div className="control-group replan-section">
                             <label><i className="fa-solid fa-arrows-rotate"></i> Replan Specific Day</label>
-                            <div className="control-row">
-                                <select
-                                    value={selectedDayToReplan}
-                                    onChange={(e) => setSelectedDayToReplan(e.target.value)}
-                                    style={{ flex: 1 }}
-                                >
-                                    {(startDate && endDate) ? getDaysInRange(startDate, endDate).map((_, i) => (
-                                        <option key={i + 1} value={i + 1}>Day {i + 1}</option>
-                                    )) : <option value="1">Day 1</option>}
-                                </select>
-                                <button onClick={replanDay} className="action-btn" style={{ background: 'var(--accent-soft)', border: 'none', color: 'var(--accent-primary)', minWidth: '80px' }}>
-                                    Update
-                                </button>
-                            </div>
+
+                            <select
+                                value={selectedDayToReplan}
+                                onChange={(e) => setSelectedDayToReplan(e.target.value)}
+                                style={{ width: '100%', marginBottom: '0.75rem' }}
+                            >
+                                {(startDate && endDate) ? getDaysInRange(startDate, endDate).map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>Day {i + 1}</option>
+                                )) : <option value="1">Day 1</option>}
+                            </select>
+
+                            <textarea
+                                placeholder="Tell me what to change for this day... (e.g. 'less walking', 'more food')"
+                                value={replanFeedback}
+                                onChange={(e) => setReplanFeedback(e.target.value)}
+                                rows="2"
+                                style={{ marginBottom: '0.75rem', fontSize: '0.85rem' }}
+                            ></textarea>
+
+                            <button onClick={replanDay} className="action-btn" style={{ width: '100%', background: 'var(--accent-soft)', border: 'none', color: 'var(--accent-primary)', justifyContent: 'center' }}>
+                                <i className="fa-solid fa-wand-magic-sparkles"></i> Update Day {selectedDayToReplan}
+                            </button>
                         </div>
                     )}
 
