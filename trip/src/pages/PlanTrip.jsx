@@ -13,8 +13,20 @@ const PlanTrip = () => {
     const WEATHER_KEY = import.meta.env.WEATHER_API_KEY;
 
     const [loading, setLoading] = useState(false);
+    const [loadingMsg, setLoadingMsg] = useState('');
+    const [outputHtml, setOutputHtml] = useState(null);
+    const [showDownload, setShowDownload] = useState(false);
     const [itinerary, setItinerary] = useState(null);
-    const [refiningIndex, setRefiningIndex] = useState(null); // {dayIndex, activityIndex}
+    const [refiningIndex, setRefiningIndex] = useState(null);
+
+    // Form State
+    const [city, setCity] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [travelType, setTravelType] = useState('family');
+    const [budget, setBudget] = useState('moderate');
+    const [placeType, setPlaceType] = useState('mixed');
+    const [customPrompt, setCustomPrompt] = useState('');
 
     const getDaysInRange = (start, end) => {
         const s = new Date(start),
