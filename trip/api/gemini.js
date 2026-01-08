@@ -25,9 +25,8 @@ export default async function handler(req, res) {
 
         // Most likely models for free tier in 2026
         const modelsToTry = [
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-1.5-pro"
+            "gemini-2.5-flash",
+
         ];
 
         let lastError = null;
