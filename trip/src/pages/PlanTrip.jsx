@@ -15,6 +15,8 @@ const PlanTrip = () => {
     const [loading, setLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('');
     const [outputHtml, setOutputHtml] = useState(null);
+    const [weatherData, setWeatherData] = useState(null);
+    const [weatherCity, setWeatherCity] = useState('');
     const [showDownload, setShowDownload] = useState(false);
 
     // Form State
@@ -65,7 +67,7 @@ const PlanTrip = () => {
 </div>`;
     };
 
-    const sendToGemini = async (prompt, weatherUI = "") => {
+    const sendToGemini = async (prompt) => {
         try {
             const res = await fetch("/api/gemini", {
                 method: "POST",
@@ -76,7 +78,7 @@ const PlanTrip = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            const htmlContent = (weatherUI || "") + marked.parse(data.text);
+            const htmlContent = marked.parse(data.text);
             setOutputHtml(htmlContent);
             setShowDownload(true);
         } catch (e) {
@@ -91,6 +93,7 @@ const PlanTrip = () => {
 
     const generatePlan = async () => {
         setOutputHtml(null); // Clear previous output
+        setWeatherData(null);
 
         if (!customPrompt) {
             if (!city) {
@@ -177,9 +180,12 @@ const PlanTrip = () => {
             5. Format in clean Markdown. Use H2 (##) for Day headers.
             `;
 
-            const weatherUI = dailySummaries.length > 0 ? renderWeatherSection(dailySummaries, city) : "";
+            if (dailySummaries.length > 0) {
+                setWeatherData(dailySummaries);
+                setWeatherCity(city);
+            }
 
-            await sendToGemini(prompt, weatherUI);
+            await sendToGemini(prompt);
 
         } catch (err) {
             console.error(err);
@@ -353,8 +359,25 @@ const PlanTrip = () => {
                             <p>{loadingMsg}</p>
                         </div>
                     ) : (
-                        outputHtml ? (
-                            <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>
+                        (outputHtml || weatherData) ? (
+                            <>
+                                {weatherData && (
+                                    <div className="weather-section">
+                                        <h3><i className="fa-solid fa-cloud-sun"></i> Weather Forecast for {weatherCity}</h3>
+                                        <div className="weather-grid">
+                                            {weatherData.map((s, idx) => (
+                                                <div key={idx} className="weather-card">
+                                                    <span className="date">Day {s.day}</span>
+                                                    <i className={`fa-solid ${getWeatherIcon(s.desc)} weather-icon`}></i>
+                                                    <span className="temp">{Math.round(s.temp)}°C</span>
+                                                    <span className="desc">{s.desc}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {outputHtml && <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>}
+                            </>
                         ) : (
                             <div className="placeholder-state">
                                 <i className="fa-solid fa-map-location-dot"></i>
