@@ -18,6 +18,8 @@ const PlanTrip = () => {
     const [weatherData, setWeatherData] = useState(null);
     const [weatherCity, setWeatherCity] = useState('');
     const [showDownload, setShowDownload] = useState(false);
+    const [selectedDayToReplan, setSelectedDayToReplan] = useState('1');
+    const [replanFeedback, setReplanFeedback] = useState('');
 
     // Form State
     const [city, setCity] = useState('');
@@ -85,6 +87,48 @@ const PlanTrip = () => {
             setOutputHtml(
                 `<div class="placeholder-state" style="color:red">${e.message}</div>`
             );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const replanDay = async () => {
+        if (!outputHtml) {
+            setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-circle-exclamation"></i><p>Generate an itinerary first before replanning.</p></div>`);
+            return;
+        }
+
+        setLoading(true);
+        setLoadingMsg(`Replanning Day ${selectedDayToReplan}...`);
+
+        try {
+            // Extract raw markdown from the current outputHtml
+            // This is a simplified approach; a more robust solution might store raw markdown directly.
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = outputHtml;
+            const rawMarkdown = tempDiv.innerText; // This will lose formatting, but gets the text content
+
+            const prompt = `I have this travel itinerary:
+            
+            ${rawMarkdown}
+            
+            Please rewrite ONLY **Day ${selectedDayToReplan}** with different activities/suggestions. 
+            
+            **User Feedback/Requests for this day:**
+            ${replanFeedback || "Give me something different and interesting."}
+            
+            **Important:** 
+            - Use the same short, simple Indian English style.
+            - Keep the structure (Morning, Lunch, Afternoon, Evening) exactly the same.
+            - Keep all other days (Day 1, 2, etc.) EXACTLY as they are. Do not change them.
+            - Return the full updated itinerary in Markdown.
+            `;
+
+            await sendToGemini(prompt);
+            setReplanFeedback(''); // Clear feedback after successful replan
+        } catch (err) {
+            console.error("Replan error:", err);
+            setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-server"></i><p>Error replanning day: ${err.message}</p></div>`);
         } finally {
             setLoading(false);
         }
@@ -255,20 +299,28 @@ const PlanTrip = () => {
                     {outputHtml && (
                         <div className="control-group replan-section">
                             <label><i className="fa-solid fa-arrows-rotate"></i> Replan Specific Day</label>
-                            <div className="control-row">
-                                <select
-                                    value={selectedDayToReplan}
-                                    onChange={(e) => setSelectedDayToReplan(e.target.value)}
-                                    style={{ flex: 1 }}
-                                >
-                                    {(startDate && endDate) ? getDaysInRange(startDate, endDate).map((_, i) => (
-                                        <option key={i + 1} value={i + 1}>Day {i + 1}</option>
-                                    )) : <option value="1">Day 1</option>}
-                                </select>
-                                <button onClick={replanDay} className="action-btn" style={{ background: 'var(--accent-soft)', border: 'none', color: 'var(--accent-primary)', minWidth: '80px' }}>
-                                    Update
-                                </button>
-                            </div>
+
+                            <select
+                                value={selectedDayToReplan}
+                                onChange={(e) => setSelectedDayToReplan(e.target.value)}
+                                style={{ width: '100%', marginBottom: '0.75rem' }}
+                            >
+                                {(startDate && endDate) ? getDaysInRange(startDate, endDate).map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>Day {i + 1}</option>
+                                )) : <option value="1">Day 1</option>}
+                            </select>
+
+                            <textarea
+                                placeholder="What should be different? (e.g. 'I don't like museums', 'Add more food spots')"
+                                value={replanFeedback}
+                                onChange={(e) => setReplanFeedback(e.target.value)}
+                                rows="2"
+                                style={{ marginBottom: '0.75rem', fontSize: '0.85rem' }}
+                            ></textarea>
+
+                            <button onClick={replanDay} className="action-btn" style={{ width: '100%', background: 'var(--accent-soft)', border: 'none', color: 'var(--accent-primary)', justifyContent: 'center' }}>
+                                <i className="fa-solid fa-wand-magic-sparkles"></i> Update Day {selectedDayToReplan}
+                            </button>
                         </div>
                     )}
 
