@@ -15,9 +15,11 @@ const PlanTrip = () => {
     const [loading, setLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('');
     const [outputHtml, setOutputHtml] = useState(null);
+    const [rawMarkdown, setRawMarkdown] = useState('');
     const [weatherData, setWeatherData] = useState(null);
     const [weatherCity, setWeatherCity] = useState('');
     const [showDownload, setShowDownload] = useState(false);
+    const [selectedDayToReplan, setSelectedDayToReplan] = useState('1');
 
     // Form State
     const [city, setCity] = useState('');
@@ -78,6 +80,7 @@ const PlanTrip = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
+            setRawMarkdown(data.text);
             const htmlContent = marked.parse(data.text);
             setOutputHtml(htmlContent);
             setShowDownload(true);
@@ -195,6 +198,34 @@ const PlanTrip = () => {
         } catch (err) {
             console.error(err);
             setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-server"></i><p>Critical Error: ${err.message}</p></div>`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const replanDay = async () => {
+        if (!rawMarkdown) return;
+
+        setLoading(true);
+        setLoadingMsg(`Updating Day ${selectedDayToReplan}...`);
+
+        try {
+            const prompt = `I have this travel itinerary:
+            
+            ${rawMarkdown}
+            
+            Please rewrite ONLY **Day ${selectedDayToReplan}** with different activities/suggestions. 
+            
+            **Important:** 
+            - Use the same short, simple Indian English style.
+            - Keep the structure (Morning, Lunch, Afternoon, Evening) exactly the same.
+            - Keep all other days (Day 1, 2, etc.) EXACTLY as they are. Do not change them.
+            - Return the full updated itinerary in Markdown.
+            `;
+
+            await sendToGemini(prompt);
+        } catch (err) {
+            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -342,6 +373,26 @@ const PlanTrip = () => {
                     <button onClick={generatePlan} className="generate-btn">
                         <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
                     </button>
+
+                    {outputHtml && (
+                        <div className="control-group" style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+                            <label><i className="fa-solid fa-arrows-rotate"></i> Replan Specific Day</label>
+                            <div className="control-row">
+                                <select
+                                    value={selectedDayToReplan}
+                                    onChange={(e) => setSelectedDayToReplan(e.target.value)}
+                                    style={{ flex: 1 }}
+                                >
+                                    {getDaysInRange(startDate, endDate).map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>Day {i + 1}</option>
+                                    ))}
+                                </select>
+                                <button onClick={replanDay} className="action-btn" style={{ background: 'var(--accent-soft)', border: 'none', color: 'var(--accent-primary)' }}>
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </aside>
 
