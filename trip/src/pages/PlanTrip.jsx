@@ -391,9 +391,12 @@ ${rawMarkdown}
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            // Clean up JSON in case Gemini adds markdown blocks
+            // Robust JSON extraction
             let jsonText = data.text.trim();
-            jsonText = jsonText.replace(/^```json\n|```$/g, '').trim();
+            const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                jsonText = jsonMatch[0];
+            }
 
             setCalendarJson(jsonText);
             setShowCalendarModal(true);
