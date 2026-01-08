@@ -13,18 +13,8 @@ const PlanTrip = () => {
     const WEATHER_KEY = import.meta.env.WEATHER_API_KEY;
 
     const [loading, setLoading] = useState(false);
-    const [loadingMsg, setLoadingMsg] = useState('');
-    const [outputHtml, setOutputHtml] = useState(null);
-    const [showDownload, setShowDownload] = useState(false);
-
-    // Form State
-    const [city, setCity] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [travelType, setTravelType] = useState('family');
-    const [budget, setBudget] = useState('moderate');
-    const [placeType, setPlaceType] = useState('mixed');
-    const [customPrompt, setCustomPrompt] = useState('');
+    const [itinerary, setItinerary] = useState(null);
+    const [refiningIndex, setRefiningIndex] = useState(null); // {dayIndex, activityIndex}
 
     const getDaysInRange = (start, end) => {
         const s = new Date(start),
@@ -34,35 +24,62 @@ const PlanTrip = () => {
         return days;
     };
 
-    const sendToGemini = async (prompt, weatherInfo = "") => {
+    const sendToGemini = async (prompt, isRefinement = false) => {
         try {
+            const systemPrompt = `You are an expert travel planner for Tamil Nadu. 
+            Respond ONLY with a valid JSON object. 
+            Do not include any markdown formatting like \`\`\`json or backticks.
+            Structure:
+            {
+              "summary": "Brief overview",
+              "days": [
+                {
+                  "day": 1,
+                  "activities": [
+                    { "time": "Morning (09:00 - 13:00)", "activity": "..." },
+                    { "time": "Lunch", "activity": "..." },
+                    { "time": "Afternoon (14:00 - 18:00)", "activity": "..." },
+                    { "time": "Evening", "activity": "..." }
+                  ]
+                }
+              ],
+              "logistics": "Transport & Costs",
+              "packing": "Essentials"
+            }`;
+
             const res = await fetch("/api/gemini", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ prompt: `${systemPrompt}\n\nUser Request: ${prompt}` })
             });
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            const fullContent =
-                (weatherInfo ? weatherInfo + "\n---\n" : "") + data.text;
+            // Clean the response from potential markdown blocks
+            const cleanJson = data.text.replace(/```json|```/g, "").trim();
+            const parsed = JSON.parse(cleanJson);
 
-            const htmlContent = marked.parse(fullContent);
-            setOutputHtml(htmlContent);
-            setShowDownload(true);
+            if (isRefinement) {
+                return parsed;
+            } else {
+                setItinerary(parsed);
+                setShowDownload(true);
+            }
         } catch (e) {
-            setOutputHtml(
-                `<div class="placeholder-state" style="color:red">${e.message}</div>`
-            );
+            console.error("Gemini Error:", e);
+            if (!isRefinement) {
+                setOutputHtml(`<div class="placeholder-state" style="color:red">Failed to generate plan. Please try again.</div>`);
+            }
+            throw e;
         } finally {
-            setLoading(false);
+            if (!isRefinement) setLoading(false);
         }
     };
 
-
     const generatePlan = async () => {
-        setOutputHtml(null); // Clear previous output
+        setItinerary(null);
+        setOutputHtml(null);
 
         if (!customPrompt) {
             if (!city) {
@@ -81,7 +98,6 @@ const PlanTrip = () => {
 
         if (customPrompt) {
             await sendToGemini(customPrompt);
-            setLoading(false);
             return;
         }
 
@@ -89,7 +105,6 @@ const PlanTrip = () => {
         let dailySummaries = [];
         const days = getDaysInRange(startDate, endDate);
 
-        // 1. Try to fetch weather
         try {
             setLoadingMsg("Checking forecast...");
             const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${WEATHER_KEY}&units=metric`);
@@ -102,60 +117,48 @@ const PlanTrip = () => {
                     if (!forecastMap.has(date)) forecastMap.set(date, e);
                 });
 
-                weatherInfo = `### Weather Forecast for ${city}\n`;
                 days.forEach((d, i) => {
                     const ds = d.toISOString().split("T")[0];
                     const f = forecastMap.get(ds);
                     if (f) {
-                        const desc = f.weather[0].description;
-                        const temp = f.main.temp;
-                        weatherInfo += `- **${d.toDateString()}**: ${desc}, ${temp}°C\n`;
-                        dailySummaries.push({ day: i + 1, desc, temp });
+                        dailySummaries.push(`Day ${i + 1}: ${f.weather[0].description}, ${f.main.temp}°C`);
                     }
                 });
-            } else {
-                console.warn("Weather API Error:", weatherData.message);
+                weatherInfo = dailySummaries.join("; ");
             }
         } catch (wErr) {
-            console.warn("Weather Fetch Failed (continuing without weather):", wErr);
+            console.warn("Weather Fetch Failed");
         }
 
-        // 2. Generate Plan with Gemini
         try {
-            setLoadingMsg("Drafting your professional itinerary...");
+            setLoadingMsg("Drafting your personalized itinerary...");
+            const prompt = `Create a ${days.length}-day itinerary for ${city} from ${startDate} to ${endDate}.
+            Travelers: ${travelType}. Budget: ${budget}. Interests: ${placeType}.
+            Weather: ${weatherInfo || "Data unavailable"}.`;
 
-            const weatherSection = dailySummaries.length > 0
-                ? `**Weather Brief:**\n${dailySummaries.map(d => `Day ${d.day}: ${d.desc}, ${d.temp}°C`).join('; ')}`
-                : "**Weather:** Data unavailable (pack for seasonal norms).";
-
-            const prompt = `Create a ${days.length}-day Exclusive Tamil Nadu Itinerary for ${city} (${startDate} to ${endDate}).
-            
-            **Client Profile:**
-            - Type: ${travelType}
-            - Budget Level: ${budget}
-            - Interests: ${placeType}
-            
-            ${weatherSection}
-            
-            **Requirements:**
-            1. **Executive Summary**: A brief, inspiring overview of the trip.
-            2. **Daily Agenda**: strictly formatted as:
-               - **Morning (09:00 - 13:00)**: [Activities]
-               - **Lunch**: [Restaurant Suggestion]
-               - **Afternoon (14:00 - 18:00)**: [Activities]
-               - **Evening**: [Relaxation/Dinner spots]
-            3. **Logistics**: Transport tips and estimated daily costs.
-            4. **Packing Essentials**: Based on the weather.
-            5. Format in clean Markdown. Use H2 (##) for Day headers.
-            `;
-
-            await sendToGemini(prompt, weatherInfo);
-
+            await sendToGemini(prompt);
         } catch (err) {
-            console.error(err);
-            setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-server"></i><p>Critical Error: ${err.message}</p></div>`);
-        } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRefineActivity = async (dayIdx, actIdx, feedback) => {
+        setRefiningIndex({ dayIdx, actIdx });
+        try {
+            const currentPlan = JSON.stringify(itinerary);
+            const prompt = `Based on the following itinerary, please refine Day ${dayIdx + 1}, Activity "${itinerary.days[dayIdx].activities[actIdx].time}".
+            Feedback: ${feedback}
+            
+            Current Itinerary: ${currentPlan}
+            
+            Respond with the FULL updated JSON itinerary with ONLY the requested change applied.`;
+
+            const updatedItinerary = await sendToGemini(prompt, true);
+            setItinerary(updatedItinerary);
+        } catch (e) {
+            alert("Failed to update activity. Please try again.");
+        } finally {
+            setRefiningIndex(null);
         }
     };
 
@@ -308,7 +311,7 @@ const PlanTrip = () => {
                 <div className="result-header">
                     <h2>Your Itinerary</h2>
                     <div className="actions">
-                        {showDownload && (
+                        {showDownload && itinerary && (
                             <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
                                 <i className="fa-solid fa-file-pdf"></i> Download PDF
                             </button>
@@ -323,7 +326,61 @@ const PlanTrip = () => {
                             <p>{loadingMsg}</p>
                         </div>
                     ) : (
-                        outputHtml ? (
+                        itinerary ? (
+                            <div className="itinerary-json-view">
+                                <div className="itinerary-summary">
+                                    <p>{itinerary.summary}</p>
+                                </div>
+
+                                {itinerary.days.map((day, dIdx) => (
+                                    <div key={dIdx} className="itinerary-day">
+                                        <h3>Day {day.day}</h3>
+                                        <div className="activities-grid">
+                                            {day.activities.map((act, aIdx) => {
+                                                const isRefining = refiningIndex?.dayIdx === dIdx && refiningIndex?.actIdx === aIdx;
+                                                return (
+                                                    <div key={aIdx} className={`activity-card ${isRefining ? 'refining' : ''}`}>
+                                                        <div className="activity-time">{act.time}</div>
+                                                        <div className="activity-content">
+                                                            {act.activity}
+                                                        </div>
+                                                        <div className="activity-edit">
+                                                            <button
+                                                                className="refine-btn"
+                                                                onClick={() => {
+                                                                    const feedback = prompt(`What would you like to change about this ${act.time} activity?`, act.activity);
+                                                                    if (feedback && feedback !== act.activity) {
+                                                                        handleRefineActivity(dIdx, aIdx, feedback);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <i className="fa-solid fa-pen-to-square"></i> Refine
+                                                            </button>
+                                                        </div>
+                                                        {isRefining && (
+                                                            <div className="card-loader">
+                                                                <i className="fa-solid fa-circle-notch fa-spin"></i> Refining...
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="itinerary-footer-info">
+                                    <div className="info-section">
+                                        <h4><i className="fa-solid fa-truck-ramp-box"></i> Logistics</h4>
+                                        <p>{itinerary.logistics}</p>
+                                    </div>
+                                    <div className="info-section">
+                                        <h4><i className="fa-solid fa-suitcase"></i> Packing Essentials</h4>
+                                        <p>{itinerary.packing}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : outputHtml ? (
                             <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>
                         ) : (
                             <div className="placeholder-state">
