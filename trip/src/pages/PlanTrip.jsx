@@ -159,25 +159,30 @@ const PlanTrip = () => {
                 ? `**Weather Brief:**\n${dailySummaries.map(d => `Day ${d.day}: ${d.desc}, ${d.temp}°C`).join('; ')}`
                 : "**Weather:** Data unavailable (pack for seasonal norms).";
 
-            const prompt = `Create a ${days.length}-day Exclusive Tamil Nadu Itinerary for ${city} (${startDate} to ${endDate}).
+            const prompt = `Create a short and simple ${days.length}-day Tamil Nadu travel plan for ${city} (${startDate} to ${endDate}).
             
-            **Client Profile:**
-            - Type: ${travelType}
-            - Budget Level: ${budget}
-            - Interests: ${placeType}
+            **Traveler Info:**
+            - Category: ${travelType}
+            - Budget: ${budget}
+            - Interest: ${placeType}
             
             ${weatherSection}
             
-            **Requirements:**
-            1. **Executive Summary**: A brief, inspiring overview of the trip.
-            2. **Daily Agenda**: strictly formatted as:
-               - **Morning (09:00 - 13:00)**: [Activities]
-               - **Lunch**: [Restaurant Suggestion]
-               - **Afternoon (14:00 - 18:00)**: [Activities]
-               - **Evening**: [Relaxation/Dinner spots]
-            3. **Logistics**: Transport tips and estimated daily costs.
-            4. **Packing Essentials**: Based on the weather.
-            5. Format in clean Markdown. Use H2 (##) for Day headers.
+            **Guidelines:**
+            - Use very simple, friendly Indian English (easy to understand).
+            - Keep it concise. No long paragraphs.
+            - Focus on the best local experiences.
+
+            **Format:**
+            1. **Quick Summary**: 2-3 lines about the trip.
+            2. **Daily Plan**:
+               - **Morning**: [Top 1-2 activities]
+               - **Lunch**: [1 suggestion]
+               - **Afternoon**: [1-2 activities]
+               - **Evening**: [Best spot for dinner/relaxing]
+            3. **Short Tips**: 2-3 helpful points for transport or packing.
+            
+            Use H2 (##) for Day headers and Markdown for lists.
             `;
 
             if (dailySummaries.length > 0) {
