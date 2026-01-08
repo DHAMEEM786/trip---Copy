@@ -215,21 +215,24 @@ const PlanTrip = () => {
             
             ${rawMarkdown}
             
-            Please rewrite ONLY the content for **Day ${selectedDayToReplan}** based on this feedback:
-            ${replanFeedback || "Suggest different local experiences or hidden gems."}
+            **OBJECTIVE:**
+            Please provide DIFFERENT activities for **Day ${selectedDayToReplan}**. 
+            
+            **Specific Feedback:**
+            ${replanFeedback || "Suggest entirely new local experiences, hidden gems, or different spots than the ones currently listed."}
             
             **Format to return (START DIRECTLY WITH THE HEADER):**
             ## Day ${selectedDayToReplan}
-            - **Morning**: ...
-            - **Lunch**: ...
-            - **Afternoon**: ...
-            - **Evening**: ...
+            - **Morning**: [NEW activity 1-2]
+            - **Lunch**: [NEW suggest 1]
+            - **Afternoon**: [NEW activity 1-2]
+            - **Evening**: [NEW best spot]
             
             **CRITICAL:**
-            - Return ONLY the markdown for Day ${selectedDayToReplan}.
+            - Return ONLY the updated markdown for Day ${selectedDayToReplan}.
             - DO NOT return the full itinerary.
-            - DO NOT return any "Here is your plan" or concluding text. 
-            - Use the same simple Indian English style.
+            - Ensure the activities are DIFFERENT from what is currently in Day ${selectedDayToReplan}.
+            - Use the same simple, friendly Indian English style.
             `;
 
             const res = await fetch("/api/gemini", {
@@ -241,34 +244,22 @@ const PlanTrip = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            const newDayContent = data.text.trim();
+            let newDayContent = data.text.trim();
+            // Remove markdown code block markers if Gemini included them
+            newDayContent = newDayContent.replace(/^```markdown\n|```$/g, '').trim();
 
-            // Surgical Swap logic
-            let currentContent = rawMarkdown;
-            const dayHeader = `## Day ${selectedDayToReplan}`;
-            const nextDayHeader = `## Day ${parseInt(selectedDayToReplan) + 1}`;
-            const tipsHeader = `3. **Short Tips**`;
+            // Surgical Swap logic using Regex
+            const currentContent = rawMarkdown;
+            const dayNum = selectedDayToReplan;
 
-            let startIndex = currentContent.indexOf(dayHeader);
-            if (startIndex === -1) {
-                throw new Error("Could not find the specific day section to update in the current plan.");
+            // Regex to find ## Day X and everything until the next ## Day Y or 3. **Short Tips**
+            const dayRegex = new RegExp(`## Day ${dayNum}[\\s\\S]*?(?=(## Day ${parseInt(dayNum) + 1}|3\\. \\*\\*Short Tips\\*\\*|$))`, 'i');
+
+            if (!dayRegex.test(currentContent)) {
+                throw new Error(`Could not locate section for Day ${dayNum} in the current plan.`);
             }
 
-            // Find where this day section ends
-            let endIndex = currentContent.indexOf(nextDayHeader, startIndex + dayHeader.length);
-            if (endIndex === -1) {
-                endIndex = currentContent.indexOf(tipsHeader, startIndex + dayHeader.length);
-            }
-            if (endIndex === -1) {
-                endIndex = currentContent.length;
-            }
-
-            const updatedMarkdown =
-                currentContent.substring(0, startIndex).trim() +
-                "\n\n" +
-                newDayContent +
-                "\n\n" +
-                currentContent.substring(endIndex).trim();
+            const updatedMarkdown = currentContent.replace(dayRegex, newDayContent + "\n\n");
 
             setRawMarkdown(updatedMarkdown);
             setOutputHtml(marked.parse(updatedMarkdown));
@@ -276,7 +267,7 @@ const PlanTrip = () => {
 
         } catch (err) {
             console.error("Replan error:", err);
-            // Optionally inform the user
+            alert(`Sorry, I couldn't update the plan: ${err.message}`);
         } finally {
             setLoading(false);
         }
