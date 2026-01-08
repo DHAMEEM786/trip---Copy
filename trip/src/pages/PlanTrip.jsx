@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { usePageTitle, usePageStyle, useScript } from '../hooks';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 
 const PlanTrip = () => {
     usePageTitle('Tamil Nadu Travel Planner AI');
@@ -18,8 +16,6 @@ const PlanTrip = () => {
     const [loadingMsg, setLoadingMsg] = useState('');
     const [outputHtml, setOutputHtml] = useState(null);
     const [showDownload, setShowDownload] = useState(false);
-    const [itinerary, setItinerary] = useState(null);
-    const [refiningIndex, setRefiningIndex] = useState(null); // {dayIndex, activityIndex}
 
     // Form State
     const [city, setCity] = useState('');
@@ -38,62 +34,35 @@ const PlanTrip = () => {
         return days;
     };
 
-    const sendToGemini = async (prompt, isRefinement = false) => {
+    const sendToGemini = async (prompt, weatherInfo = "") => {
         try {
-            const systemPrompt = `You are an expert travel planner for Tamil Nadu. 
-            Respond ONLY with a valid JSON object. 
-            Do not include any markdown formatting like \`\`\`json or backticks.
-            Structure:
-            {
-              "summary": "Brief overview",
-              "days": [
-                {
-                  "day": 1,
-                  "activities": [
-                    { "time": "Morning (09:00 - 13:00)", "activity": "..." },
-                    { "time": "Lunch", "activity": "..." },
-                    { "time": "Afternoon (14:00 - 18:00)", "activity": "..." },
-                    { "time": "Evening", "activity": "..." }
-                  ]
-                }
-              ],
-              "logistics": "Transport & Costs",
-              "packing": "Essentials"
-            }`;
-
             const res = await fetch("/api/gemini", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: `${systemPrompt}\n\nUser Request: ${prompt}` })
+                body: JSON.stringify({ prompt })
             });
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            // Clean the response from potential markdown blocks
-            const cleanJson = data.text.replace(/```json|```/g, "").trim();
-            const parsed = JSON.parse(cleanJson);
+            const fullContent =
+                (weatherInfo ? weatherInfo + "\n---\n" : "") + data.text;
 
-            if (isRefinement) {
-                return parsed;
-            } else {
-                setItinerary(parsed);
-                setShowDownload(true);
-            }
+            const htmlContent = marked.parse(fullContent);
+            setOutputHtml(htmlContent);
+            setShowDownload(true);
         } catch (e) {
-            console.error("Gemini Error:", e);
-            if (!isRefinement) {
-                setOutputHtml(`<div class="placeholder-state" style="color:red">Failed to generate plan. Please try again.</div>`);
-            }
-            throw e;
+            setOutputHtml(
+                `<div class="placeholder-state" style="color:red">${e.message}</div>`
+            );
         } finally {
-            if (!isRefinement) setLoading(false);
+            setLoading(false);
         }
     };
 
+
     const generatePlan = async () => {
-        setItinerary(null);
-        setOutputHtml(null);
+        setOutputHtml(null); // Clear previous output
 
         if (!customPrompt) {
             if (!city) {
@@ -112,6 +81,7 @@ const PlanTrip = () => {
 
         if (customPrompt) {
             await sendToGemini(customPrompt);
+            setLoading(false);
             return;
         }
 
@@ -119,6 +89,7 @@ const PlanTrip = () => {
         let dailySummaries = [];
         const days = getDaysInRange(startDate, endDate);
 
+        // 1. Try to fetch weather
         try {
             setLoadingMsg("Checking forecast...");
             const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${WEATHER_KEY}&units=metric`);
@@ -131,55 +102,62 @@ const PlanTrip = () => {
                     if (!forecastMap.has(date)) forecastMap.set(date, e);
                 });
 
+                weatherInfo = `### Weather Forecast for ${city}\n`;
                 days.forEach((d, i) => {
                     const ds = d.toISOString().split("T")[0];
                     const f = forecastMap.get(ds);
                     if (f) {
-                        dailySummaries.push(`Day ${i + 1}: ${f.weather[0].description}, ${f.main.temp}°C`);
+                        const desc = f.weather[0].description;
+                        const temp = f.main.temp;
+                        weatherInfo += `- **${d.toDateString()}**: ${desc}, ${temp}°C\n`;
+                        dailySummaries.push({ day: i + 1, desc, temp });
                     }
                 });
-                weatherInfo = dailySummaries.join("; ");
+            } else {
+                console.warn("Weather API Error:", weatherData.message);
             }
         } catch (wErr) {
-            console.warn("Weather Fetch Failed");
+            console.warn("Weather Fetch Failed (continuing without weather):", wErr);
         }
 
+        // 2. Generate Plan with Gemini
         try {
-            setLoadingMsg("Drafting your personalized itinerary...");
-            const prompt = `Create a ${days.length}-day itinerary for ${city} from ${startDate} to ${endDate}.
-            Travelers: ${travelType}. Budget: ${budget}. Interests: ${placeType}.
-            Weather: ${weatherInfo || "Data unavailable"}.`;
+            setLoadingMsg("Drafting your professional itinerary...");
 
-            await sendToGemini(prompt);
+            const weatherSection = dailySummaries.length > 0
+                ? `**Weather Brief:**\n${dailySummaries.map(d => `Day ${d.day}: ${d.desc}, ${d.temp}°C`).join('; ')}`
+                : "**Weather:** Data unavailable (pack for seasonal norms).";
+
+            const prompt = `Create a ${days.length}-day Exclusive Tamil Nadu Itinerary for ${city} (${startDate} to ${endDate}).
+            
+            **Client Profile:**
+            - Type: ${travelType}
+            - Budget Level: ${budget}
+            - Interests: ${placeType}
+            
+            ${weatherSection}
+            
+            **Requirements:**
+            1. **Executive Summary**: A brief, inspiring overview of the trip.
+            2. **Daily Agenda**: strictly formatted as:
+               - **Morning (09:00 - 13:00)**: [Activities]
+               - **Lunch**: [Restaurant Suggestion]
+               - **Afternoon (14:00 - 18:00)**: [Activities]
+               - **Evening**: [Relaxation/Dinner spots]
+            3. **Logistics**: Transport tips and estimated daily costs.
+            4. **Packing Essentials**: Based on the weather.
+            5. Format in clean Markdown. Use H2 (##) for Day headers.
+            `;
+
+            await sendToGemini(prompt, weatherInfo);
+
         } catch (err) {
+            console.error(err);
+            setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-server"></i><p>Critical Error: ${err.message}</p></div>`);
+        } finally {
             setLoading(false);
         }
     };
-
-    const handleRefineActivity = async (dayIdx, actIdx, feedback) => {
-        setRefiningIndex({ dayIdx, actIdx });
-        try {
-            const currentPlan = JSON.stringify(itinerary);
-            const prompt = `Based on the following itinerary, please refine Day ${dayIdx + 1}, Activity "${itinerary.days[dayIdx].activities[actIdx].time}".
-            Feedback: ${feedback}
-            
-            Current Itinerary: ${currentPlan}
-            
-            Respond with the FULL updated JSON itinerary with ONLY the requested change applied.`;
-
-            const updatedItinerary = await sendToGemini(prompt, true);
-            setItinerary(updatedItinerary);
-        } catch (e) {
-            alert("Failed to update activity. Please try again.");
-        } finally {
-            setRefiningIndex(null);
-        }
-    };
-
-    const renderMarkdown = (text) => {
-        if (!text) return "";
-        return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    }
 
     const downloadPDF = () => {
         const element = document.getElementById("output");
@@ -215,204 +193,147 @@ const PlanTrip = () => {
     };
 
     return (
-        <div style={{ paddingTop: '80px' }}>
-            <Navbar />
-            <div className="app-container">
-                <aside className="sidebar">
-                    <div className="brand">
-                        <i className="fa-solid fa-route"></i>
-                        <h1>TN.AI Planner</h1>
+        <div className="app-container">
+            <aside className="sidebar">
+                <div className="brand">
+                    <i className="fa-solid fa-route"></i>
+                    <h1>TN.AI Planner</h1>
+                </div>
+
+                <div className="controls">
+                    <div className="control-group">
+                        <label htmlFor="cityInput"><i className="fa-solid fa-city"></i> Destination</label>
+                        <input
+                            type="text"
+                            id="cityInput"
+                            placeholder="Where do you want to go?"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                        />
                     </div>
 
-                    <div className="controls">
+                    <div className="control-row">
                         <div className="control-group">
-                            <label htmlFor="cityInput"><i className="fa-solid fa-city"></i> Destination</label>
+                            <label htmlFor="startDate"><i className="fa-regular fa-calendar"></i> Start</label>
                             <input
-                                type="text"
-                                id="cityInput"
-                                placeholder="Where do you want to go?"
-                                value={city}
-                                onChange={(e) => setCity(e.target.value)}
+                                type="date"
+                                id="startDate"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
                             />
                         </div>
-
-                        <div className="control-row">
-                            <div className="control-group">
-                                <label htmlFor="startDate"><i className="fa-regular fa-calendar"></i> Start</label>
-                                <input
-                                    type="date"
-                                    id="startDate"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                />
-                            </div>
-                            <div className="control-group">
-                                <label htmlFor="endDate"><i className="fa-regular fa-calendar-check"></i> End</label>
-                                <input
-                                    type="date"
-                                    id="endDate"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
                         <div className="control-group">
-                            <label>Travelers</label>
-                            <div className="select-grid" id="travelTypeOptions">
-                                {['solo', 'partner', 'family', 'friends'].map(type => (
-                                    <button
-                                        key={type}
-                                        className={`select-btn ${travelType === type ? 'active' : ''}`}
-                                        onClick={() => setTravelType(type)}
-                                    >
-                                        <i className={`fa-solid ${type === 'solo' ? 'fa-person' : type === 'partner' ? 'fa-heart' : type === 'family' ? 'fa-users' : 'fa-user-group'}`}></i> {type.charAt(0).toUpperCase() + type.slice(1)}
-                                    </button>
-                                ))}
-                            </div>
+                            <label htmlFor="endDate"><i className="fa-regular fa-calendar-check"></i> End</label>
+                            <input
+                                type="date"
+                                id="endDate"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
                         </div>
-
-                        <div className="control-group">
-                            <label>Budget</label>
-                            <div className="select-grid" id="budgetOptions">
-                                {[
-                                    { val: 'cheap', label: 'Budget', icon: '$' },
-                                    { val: 'moderate', label: 'Standard', icon: '$$' },
-                                    { val: 'luxury', label: 'Luxury', icon: '$$$' }
-                                ].map(item => (
-                                    <button
-                                        key={item.val}
-                                        className={`select-btn ${budget === item.val ? 'active' : ''}`}
-                                        onClick={() => setBudget(item.val)}
-                                    >
-                                        <span>{item.icon}</span> {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="control-group">
-                            <label>Interests</label>
-                            <div className="select-grid" id="placeTypeOptions">
-                                {[
-                                    { val: 'mixed', label: 'Mixed' },
-                                    { val: 'adventure', label: 'Adventure' },
-                                    { val: 'waterfall', label: 'Nature' },
-                                    { val: 'temple', label: 'Heritage' }
-                                ].map(item => (
-                                    <button
-                                        key={item.val}
-                                        className={`select-btn ${placeType === item.val ? 'active' : ''}`}
-                                        onClick={() => setPlaceType(item.val)}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="control-group">
-                            <label htmlFor="customPrompt">Custom Requests</label>
-                            <textarea
-                                id="customPrompt"
-                                rows="3"
-                                placeholder="Specific requirements? (e.g., wheelchair access, vegan food)"
-                                value={customPrompt}
-                                onChange={(e) => setCustomPrompt(e.target.value)}
-                            ></textarea>
-                        </div>
-
-                        <button onClick={generatePlan} className="generate-btn">
-                            <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
-                        </button>
                     </div>
-                </aside>
 
-                <main className="main-content">
-                    <div className="result-header">
-                        <h2>Your Itinerary</h2>
-                        <div className="actions">
-                            {showDownload && itinerary && (
-                                <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
-                                    <i className="fa-solid fa-file-pdf"></i> Download PDF
+                    <div className="control-group">
+                        <label>Travelers</label>
+                        <div className="select-grid" id="travelTypeOptions">
+                            {['solo', 'partner', 'family', 'friends'].map(type => (
+                                <button
+                                    key={type}
+                                    className={`select-btn ${travelType === type ? 'active' : ''}`}
+                                    onClick={() => setTravelType(type)}
+                                >
+                                    <i className={`fa-solid ${type === 'solo' ? 'fa-person' : type === 'partner' ? 'fa-heart' : type === 'family' ? 'fa-users' : 'fa-user-group'}`}></i> {type.charAt(0).toUpperCase() + type.slice(1)}
                                 </button>
-                            )}
+                            ))}
                         </div>
                     </div>
 
-                    <div id="output" className="output-area">
-                        {loading ? (
-                            <div className="loading">
-                                <i className="fa-solid fa-circle-notch"></i>
-                                <p>{loadingMsg}</p>
-                            </div>
-                        ) : (
-                            itinerary ? (
-                                <div className="itinerary-json-view">
-                                    <div className="itinerary-summary">
-                                        <p>{itinerary.summary}</p>
-                                    </div>
+                    <div className="control-group">
+                        <label>Budget</label>
+                        <div className="select-grid" id="budgetOptions">
+                            {[
+                                { val: 'cheap', label: 'Budget', icon: '$' },
+                                { val: 'moderate', label: 'Standard', icon: '$$' },
+                                { val: 'luxury', label: 'Luxury', icon: '$$$' }
+                            ].map(item => (
+                                <button
+                                    key={item.val}
+                                    className={`select-btn ${budget === item.val ? 'active' : ''}`}
+                                    onClick={() => setBudget(item.val)}
+                                >
+                                    <span>{item.icon}</span> {item.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                                    {itinerary.days.map((day, dIdx) => (
-                                        <div key={dIdx} className="itinerary-day">
-                                            <h3>Day {day.day}</h3>
-                                            <div className="activities-grid">
-                                                {day.activities.map((act, aIdx) => {
-                                                    const isRefining = refiningIndex?.dayIdx === dIdx && refiningIndex?.actIdx === aIdx;
-                                                    return (
-                                                        <div key={aIdx} className={`activity-card ${isRefining ? 'refining' : ''}`}>
-                                                            <div className="activity-time">{act.time}</div>
-                                                            <div className="activity-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(act.activity) }}>
-                                                            </div>
-                                                            <div className="activity-edit">
-                                                                <button
-                                                                    className="refine-btn"
-                                                                    onClick={() => {
-                                                                        const feedback = prompt(`What would you like to change about this ${act.time} activity?`, act.activity);
-                                                                        if (feedback && feedback !== act.activity) {
-                                                                            handleRefineActivity(dIdx, aIdx, feedback);
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <i className="fa-solid fa-pen-to-square"></i> Refine
-                                                                </button>
-                                                            </div>
-                                                            {isRefining && (
-                                                                <div className="card-loader">
-                                                                    <i className="fa-solid fa-circle-notch fa-spin"></i> Refining...
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
+                    <div className="control-group">
+                        <label>Interests</label>
+                        <div className="select-grid" id="placeTypeOptions">
+                            {[
+                                { val: 'mixed', label: 'Mixed' },
+                                { val: 'adventure', label: 'Adventure' },
+                                { val: 'waterfall', label: 'Nature' },
+                                { val: 'temple', label: 'Heritage' }
+                            ].map(item => (
+                                <button
+                                    key={item.val}
+                                    className={`select-btn ${placeType === item.val ? 'active' : ''}`}
+                                    onClick={() => setPlaceType(item.val)}
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                                    <div className="itinerary-footer-info">
-                                        <div className="info-section">
-                                            <h4><i className="fa-solid fa-truck-ramp-box"></i> Logistics</h4>
-                                            <p>{itinerary.logistics}</p>
-                                        </div>
-                                        <div className="info-section">
-                                            <h4><i className="fa-solid fa-suitcase"></i> Packing Essentials</h4>
-                                            <p>{itinerary.packing}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : outputHtml ? (
-                                <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>
-                            ) : (
-                                <div className="placeholder-state">
-                                    <i className="fa-solid fa-map-location-dot"></i>
-                                    <p>Enter your trip details to generate a personalized AI travel plan.</p>
-                                </div>
-                            )
+                    <div className="control-group">
+                        <label htmlFor="customPrompt">Custom Requests</label>
+                        <textarea
+                            id="customPrompt"
+                            rows="3"
+                            placeholder="Specific requirements? (e.g., wheelchair access, vegan food)"
+                            value={customPrompt}
+                            onChange={(e) => setCustomPrompt(e.target.value)}
+                        ></textarea>
+                    </div>
+
+                    <button onClick={generatePlan} className="generate-btn">
+                        <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
+                    </button>
+                </div>
+            </aside>
+
+            <main className="main-content">
+                <div className="result-header">
+                    <h2>Your Itinerary</h2>
+                    <div className="actions">
+                        {showDownload && (
+                            <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
+                                <i className="fa-solid fa-file-pdf"></i> Download PDF
+                            </button>
                         )}
                     </div>
-                </main>
-            </div>
-            <Footer />
+                </div>
+
+                <div id="output" className="output-area">
+                    {loading ? (
+                        <div className="loading">
+                            <i className="fa-solid fa-circle-notch"></i>
+                            <p>{loadingMsg}</p>
+                        </div>
+                    ) : (
+                        outputHtml ? (
+                            <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>
+                        ) : (
+                            <div className="placeholder-state">
+                                <i className="fa-solid fa-map-location-dot"></i>
+                                <p>Enter your trip details to generate a personalized AI travel plan.</p>
+                            </div>
+                        )
+                    )}
+                </div>
+            </main>
         </div>
     );
 };
