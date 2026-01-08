@@ -1,63 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import { usePageTitle, usePageStyle, useScript } from '../hooks';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 
 const PlanTrip = () => {
     usePageTitle('Tamil Nadu Travel Planner AI');
-    usePageStyle('/ai api/style.css');
+    usePageStyle('/ai api/style.css'); // Assuming style.css is in public/ai api/
 
     // Load libraries
-    const markedStatus = useScript("https://cdn.jsdelivr.net/npm/marked/marked.min.js");
-    const html2pdfStatus = useScript("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
+    useScript("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
+    useScript("https://cdn.jsdelivr.net/npm/marked/marked.min.js");
 
+    const GEMINI_KEY = import.meta.env.GEMINI_API_KEY;
     const WEATHER_KEY = import.meta.env.WEATHER_API_KEY;
 
     const [loading, setLoading] = useState(false);
-    const [loadingMsg, setLoadingMsg] = useState('');
-    const [outputHtml, setOutputHtml] = useState(null);
-    const [showDownload, setShowDownload] = useState(false);
     const [itinerary, setItinerary] = useState(null);
-    const [refiningIndex, setRefiningIndex] = useState(null);
+    const [refiningIndex, setRefiningIndex] = useState(null); // {dayIndex, activityIndex}
 
-    // Form State
-    const [city, setCity] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [travelType, setTravelType] = useState('family');
-    const [budget, setBudget] = useState('moderate');
-    const [placeType, setPlaceType] = useState('mixed');
-    const [customPrompt, setCustomPrompt] = useState('');
+    const getDaysInRange = (start, end) => {
+        const s = new Date(start),
+            e = new Date(end);
+        const days = [];
+        for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+        return days;
+    };
 
     const sendToGemini = async (prompt, isRefinement = false) => {
         try {
             const systemPrompt = `You are an expert travel planner for Tamil Nadu. 
-            Respond ONLY with a valid JSON object. Do not include markdown blocks.
-            
+            Respond ONLY with a valid JSON object. 
+            Do not include any markdown formatting like \`\`\`json or backticks.
             Structure:
             {
-              "weather_forecast": [
-                { "date": "Date", "forecast": "weather, temp" }
-              ],
-              "summary": "Executive summary text.",
+              "summary": "Brief overview",
               "days": [
                 {
                   "day": 1,
-                  "title": "Title",
-                  "date": "Date",
-                  "day_weather": "weather, temp",
                   "activities": [
-                    { "time": "Morning (09:00 - 13:00)", "activity": "Activity text with **bold** highlights." }
+                    { "time": "Morning (09:00 - 13:00)", "activity": "..." },
+                    { "time": "Lunch", "activity": "..." },
+                    { "time": "Afternoon (14:00 - 18:00)", "activity": "..." },
+                    { "time": "Evening", "activity": "..." }
                   ]
                 }
               ],
-              "logistics": [
-                { "item": "Transport", "details": ["Detail 1", "Detail 2"] },
-                { "item": "Costs", "details": ["Detail 1"] }
-              ],
-              "packing": [
-                { "category": "Clothing", "tips": ["Tip 1"] }
-              ]
+              "logistics": "Transport & Costs",
+              "packing": "Essentials"
             }`;
 
             const res = await fetch("/api/gemini", {
@@ -69,6 +56,7 @@ const PlanTrip = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
+            // Clean the response from potential markdown blocks
             const cleanJson = data.text.replace(/```json|```/g, "").trim();
             const parsed = JSON.parse(cleanJson);
 
@@ -81,7 +69,7 @@ const PlanTrip = () => {
         } catch (e) {
             console.error("Gemini Error:", e);
             if (!isRefinement) {
-                setOutputHtml(`<div class="placeholder-state" style="color:red">Failed: ${e.message}</div>`);
+                setOutputHtml(`<div class="placeholder-state" style="color:red">Failed to generate plan. Please try again.</div>`);
             }
             throw e;
         } finally {
@@ -90,54 +78,85 @@ const PlanTrip = () => {
     };
 
     const generatePlan = async () => {
-        if (!city || !startDate || !endDate) {
-            alert("Please fill in city and dates.");
+        setItinerary(null);
+        setOutputHtml(null);
+
+        if (!customPrompt) {
+            if (!city) {
+                setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-circle-exclamation"></i><p>Please enter a destination city.</p></div>`);
+                return;
+            }
+            if (!startDate || !endDate) {
+                setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-calendar-xmark"></i><p>Please select valid start and end dates.</p></div>`);
+                return;
+            }
+        }
+
+        setShowDownload(false);
+        setLoading(true);
+        setLoadingMsg("Fetching weather data...");
+
+        if (customPrompt) {
+            await sendToGemini(customPrompt);
             return;
         }
 
-        setItinerary(null);
-        setOutputHtml(null);
-        setShowDownload(false);
-        setLoading(true);
-        setLoadingMsg("Checking local weather...");
-
         let weatherInfo = "";
+        let dailySummaries = [];
+        const days = getDaysInRange(startDate, endDate);
+
         try {
+            setLoadingMsg("Checking forecast...");
             const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${WEATHER_KEY}&units=metric`);
             const weatherData = await weatherRes.json();
 
             if (weatherData.cod === "200") {
-                const forecastLines = [];
-                const seenDates = new Set();
+                const forecastMap = new Map();
                 weatherData.list.forEach(e => {
-                    const dateStr = e.dt_txt.split(" ")[0];
-                    if (!seenDates.has(dateStr)) {
-                        forecastLines.push(`${dateStr}: ${e.weather[0].description}, ${e.main.temp}°C`);
-                        seenDates.add(dateStr);
+                    const date = e.dt_txt.split(" ")[0];
+                    if (!forecastMap.has(date)) forecastMap.set(date, e);
+                });
+
+                days.forEach((d, i) => {
+                    const ds = d.toISOString().split("T")[0];
+                    const f = forecastMap.get(ds);
+                    if (f) {
+                        dailySummaries.push(`Day ${i + 1}: ${f.weather[0].description}, ${f.main.temp}°C`);
                     }
                 });
-                weatherInfo = forecastLines.join("; ");
+                weatherInfo = dailySummaries.join("; ");
             }
         } catch (wErr) {
-            console.warn("Weather error", wErr);
+            console.warn("Weather Fetch Failed");
         }
 
-        setLoadingMsg("Crafting plan with weather data...");
-        const prompt = `Create a trip for ${city} (${startDate} to ${endDate}). Travelers: ${travelType}. Budget: ${budget}.
-        WEATHER DATA TO INCLUDE IN OUTPUT: ${weatherInfo || "N/A"}. ${customPrompt}`;
+        try {
+            setLoadingMsg("Drafting your personalized itinerary...");
+            const prompt = `Create a ${days.length}-day itinerary for ${city} from ${startDate} to ${endDate}.
+            Travelers: ${travelType}. Budget: ${budget}. Interests: ${placeType}.
+            Weather: ${weatherInfo || "Data unavailable"}.`;
 
-        await sendToGemini(prompt);
+            await sendToGemini(prompt);
+        } catch (err) {
+            setLoading(false);
+        }
     };
 
     const handleRefineActivity = async (dayIdx, actIdx, feedback) => {
         setRefiningIndex({ dayIdx, actIdx });
         try {
-            const prompt = `Refine Day ${dayIdx + 1}, Activity "${itinerary.days[dayIdx].activities[actIdx].time}" based on: ${feedback}. 
-            Retain full JSON structure. Itinerary: ${JSON.stringify(itinerary)}`;
-            const updated = await sendToGemini(prompt, true);
-            setItinerary(updated);
+            const currentPlan = JSON.stringify(itinerary);
+            const prompt = `Based on the following itinerary, please refine Day ${dayIdx + 1}, Activity "${itinerary.days[dayIdx].activities[actIdx].time}".
+            Feedback: ${feedback}
+            
+            Current Itinerary: ${currentPlan}
+            
+            Respond with the FULL updated JSON itinerary with ONLY the requested change applied.`;
+
+            const updatedItinerary = await sendToGemini(prompt, true);
+            setItinerary(updatedItinerary);
         } catch (e) {
-            alert("Refinement failed.");
+            alert("Failed to update activity. Please try again.");
         } finally {
             setRefiningIndex(null);
         }
@@ -145,166 +164,233 @@ const PlanTrip = () => {
 
     const downloadPDF = () => {
         const element = document.getElementById("output");
-        if (!element || typeof html2pdf === 'undefined') return;
+        const cityName = city || "Itinerary";
 
+        // Clone to styling for PDF (Light Mode)
         const clone = element.cloneNode(true);
-        clone.querySelectorAll('.activity-edit, .refining-overlay, .mini-refine-btn').forEach(el => el.remove());
-
         clone.style.background = "white";
-        clone.style.width = "190mm";
-        clone.style.padding = "10mm";
+        clone.style.color = "black";
+        clone.style.padding = "40px";
+        clone.style.width = "800px"; // Fixed width for A4 consistency
+        clone.style.border = "none";
+
+        // Fix Headers for PDF
+        const headers = clone.querySelectorAll('h1, h2, h3, strong');
+        headers.forEach(h => h.style.color = "#0f172a");
+
+        // Fix Links
+        const links = clone.querySelectorAll('a');
+        links.forEach(l => l.style.color = "#2563eb");
 
         const opt = {
-            margin: 10,
-            filename: `${city}_Itinerary.pdf`,
-            image: { type: 'jpeg', quality: 1.0 },
+            margin: [10, 10],
+            filename: `${cityName}_Travel_Plan.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true },
+            // eslint-disable-next-line no-undef
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
+
         // eslint-disable-next-line no-undef
         html2pdf().from(clone).set(opt).save();
     };
 
-    const renderMarkdown = (text) => {
-        if (!text) return "";
-        return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    }
-
     return (
-        <div style={{ paddingTop: '80px', minHeight: '100vh', background: '#f1f5f9' }}>
-            <Navbar />
-            <div className="app-container">
-                <aside className="sidebar">
-                    <div className="brand">
-                        <i className="fa-solid fa-route"></i>
-                        <h1>TN.AI Planner</h1>
-                    </div>
-                    <div className="controls">
-                        <div className="control-group">
-                            <label>Destination City</label>
-                            <input type="text" placeholder="e.g. Madurai" value={city} onChange={e => setCity(e.target.value)} />
-                        </div>
-                        <div className="control-row">
-                            <div className="control-group"><label>Start</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
-                            <div className="control-group"><label>End</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
-                        </div>
-                        <div className="control-group">
-                            <label>Travelers</label>
-                            <div className="select-grid">
-                                {['solo', 'partner', 'family', 'friends'].map(t => (
-                                    <button key={t} className={`select-btn ${travelType === t ? 'active' : ''}`} onClick={() => setTravelType(t)}>{t}</button>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="control-group">
-                            <label>Budget</label>
-                            <div className="select-grid">
-                                {['cheap', 'moderate', 'luxury'].map(b => (
-                                    <button key={b} className={`select-btn ${budget === b ? 'active' : ''}`} onClick={() => setBudget(b)}>{b}</button>
-                                ))}
-                            </div>
-                        </div>
-                        <button onClick={generatePlan} className="generate-btn" disabled={loading}>
-                            {loading ? "Planning..." : "Generate Plan"}
-                        </button>
-                    </div>
-                </aside>
+        <div className="app-container">
+            <aside className="sidebar">
+                <div className="brand">
+                    <i className="fa-solid fa-route"></i>
+                    <h1>TN.AI Planner</h1>
+                </div>
 
-                <main className="main-content">
-                    <div className="result-header">
-                        <h2>Personalized Itinerary</h2>
-                        {showDownload && <button onClick={downloadPDF} className="action-btn">Download PDF</button>}
+                <div className="controls">
+                    <div className="control-group">
+                        <label htmlFor="cityInput"><i className="fa-solid fa-city"></i> Destination</label>
+                        <input
+                            type="text"
+                            id="cityInput"
+                            placeholder="Where do you want to go?"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                        />
                     </div>
 
-                    <div id="output" className="output-area document-view">
-                        {loading ? (
-                            <div className="loading-state"><div className="loader"></div><p>{loadingMsg}</p></div>
-                        ) : itinerary ? (
-                            <div className="itinerary-document">
-                                {/* Weather Section */}
-                                {itinerary.weather_forecast && (
-                                    <section className="doc-section">
-                                        <h3>Weather Forecast for {city}</h3>
-                                        <ul className="doc-weather-list">
-                                            {itinerary.weather_forecast.map((w, i) => (
-                                                <li key={i}><span>→</span> <strong>{w.date}</strong>: {w.forecast}</li>
-                                            ))}
-                                        </ul>
-                                    </section>
-                                )}
-                                <hr />
+                    <div className="control-row">
+                        <div className="control-group">
+                            <label htmlFor="startDate"><i className="fa-regular fa-calendar"></i> Start</label>
+                            <input
+                                type="date"
+                                id="startDate"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </div>
+                        <div className="control-group">
+                            <label htmlFor="endDate"><i className="fa-regular fa-calendar-check"></i> End</label>
+                            <input
+                                type="date"
+                                id="endDate"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
 
-                                {/* Executive Summary */}
-                                <section className="doc-section with-bullet">
-                                    <h3>Executive Summary</h3>
-                                    <p>{itinerary.summary}</p>
-                                </section>
-                                <hr />
+                    <div className="control-group">
+                        <label>Travelers</label>
+                        <div className="select-grid" id="travelTypeOptions">
+                            {['solo', 'partner', 'family', 'friends'].map(type => (
+                                <button
+                                    key={type}
+                                    className={`select-btn ${travelType === type ? 'active' : ''}`}
+                                    onClick={() => setTravelType(type)}
+                                >
+                                    <i className={`fa-solid ${type === 'solo' ? 'fa-person' : type === 'partner' ? 'fa-heart' : type === 'family' ? 'fa-users' : 'fa-user-group'}`}></i> {type.charAt(0).toUpperCase() + type.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                                {/* Daily Agenda */}
-                                <section className="doc-section with-bullet">
-                                    <h3>Daily Agenda</h3>
-                                    {itinerary.days.map((day, dIdx) => (
-                                        <div key={dIdx} className="doc-day">
-                                            <h4>Day {day.day}: {day.title} ({day.date})</h4>
-                                            <p className="doc-day-weather"><em>Weather: {day.day_weather}</em></p>
-                                            <div className="doc-activities">
-                                                {day.activities.map((act, aIdx) => {
-                                                    const isRefining = refiningIndex?.dayIdx === dIdx && refiningIndex?.actIdx === aIdx;
-                                                    return (
-                                                        <div key={aIdx} className="doc-activity-item">
-                                                            <span>→</span>
-                                                            <div className="doc-activity-content">
-                                                                <strong>{act.time}:</strong> <span dangerouslySetInnerHTML={{ __html: renderMarkdown(act.activity) }}></span>
-                                                                <button className="mini-refine-btn" onClick={() => {
-                                                                    const f = prompt("What to change?", act.activity);
-                                                                    if (f) handleRefineActivity(dIdx, aIdx, f);
-                                                                }}><i className="fa-solid fa-wand-sparkles"></i></button>
-                                                            </div>
-                                                            {isRefining && <div className="refining-overlay">Refining...</div>}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </section>
-                                <hr />
+                    <div className="control-group">
+                        <label>Budget</label>
+                        <div className="select-grid" id="budgetOptions">
+                            {[
+                                { val: 'cheap', label: 'Budget', icon: '$' },
+                                { val: 'moderate', label: 'Standard', icon: '$$' },
+                                { val: 'luxury', label: 'Luxury', icon: '$$$' }
+                            ].map(item => (
+                                <button
+                                    key={item.val}
+                                    className={`select-btn ${budget === item.val ? 'active' : ''}`}
+                                    onClick={() => setBudget(item.val)}
+                                >
+                                    <span>{item.icon}</span> {item.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                                {/* Logistics */}
-                                <section className="doc-section with-bullet">
-                                    <h3>Logistics</h3>
-                                    {itinerary.logistics.map((log, lIdx) => (
-                                        <div key={lIdx} className="doc-log-item">
-                                            <span>→</span> <strong>{log.item}:</strong>
-                                            <ul className="doc-sub-list">
-                                                {log.details.map((det, dIdx) => <li key={dIdx}><span>→</span> {det}</li>)}
-                                            </ul>
-                                        </div>
-                                    ))}
-                                </section>
-                                <hr />
+                    <div className="control-group">
+                        <label>Interests</label>
+                        <div className="select-grid" id="placeTypeOptions">
+                            {[
+                                { val: 'mixed', label: 'Mixed' },
+                                { val: 'adventure', label: 'Adventure' },
+                                { val: 'waterfall', label: 'Nature' },
+                                { val: 'temple', label: 'Heritage' }
+                            ].map(item => (
+                                <button
+                                    key={item.val}
+                                    className={`select-btn ${placeType === item.val ? 'active' : ''}`}
+                                    onClick={() => setPlaceType(item.val)}
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                                {/* Packing */}
-                                <section className="doc-section with-bullet">
-                                    <h3>Packing Essentials</h3>
-                                    {itinerary.packing.map((pack, pIdx) => (
-                                        <div key={pIdx} className="doc-pack-item">
-                                            <span>→</span> <strong>{pack.category}:</strong>
-                                            <ul className="doc-sub-list">
-                                                {pack.tips.map((tip, tIdx) => <li key={tIdx}><span>→</span> {tip}</li>)}
-                                            </ul>
-                                        </div>
-                                    ))}
-                                </section>
-                            </div>
-                        ) : (
-                            <div className="empty-state"><i className="fa-solid fa-map-location-dot"></i><p>Ready to plan your trip.</p></div>
+                    <div className="control-group">
+                        <label htmlFor="customPrompt">Custom Requests</label>
+                        <textarea
+                            id="customPrompt"
+                            rows="3"
+                            placeholder="Specific requirements? (e.g., wheelchair access, vegan food)"
+                            value={customPrompt}
+                            onChange={(e) => setCustomPrompt(e.target.value)}
+                        ></textarea>
+                    </div>
+
+                    <button onClick={generatePlan} className="generate-btn">
+                        <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
+                    </button>
+                </div>
+            </aside>
+
+            <main className="main-content">
+                <div className="result-header">
+                    <h2>Your Itinerary</h2>
+                    <div className="actions">
+                        {showDownload && itinerary && (
+                            <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
+                                <i className="fa-solid fa-file-pdf"></i> Download PDF
+                            </button>
                         )}
                     </div>
-                </main>
-            </div>
-            <Footer />
+                </div>
+
+                <div id="output" className="output-area">
+                    {loading ? (
+                        <div className="loading">
+                            <i className="fa-solid fa-circle-notch"></i>
+                            <p>{loadingMsg}</p>
+                        </div>
+                    ) : (
+                        itinerary ? (
+                            <div className="itinerary-json-view">
+                                <div className="itinerary-summary">
+                                    <p>{itinerary.summary}</p>
+                                </div>
+
+                                {itinerary.days.map((day, dIdx) => (
+                                    <div key={dIdx} className="itinerary-day">
+                                        <h3>Day {day.day}</h3>
+                                        <div className="activities-grid">
+                                            {day.activities.map((act, aIdx) => {
+                                                const isRefining = refiningIndex?.dayIdx === dIdx && refiningIndex?.actIdx === aIdx;
+                                                return (
+                                                    <div key={aIdx} className={`activity-card ${isRefining ? 'refining' : ''}`}>
+                                                        <div className="activity-time">{act.time}</div>
+                                                        <div className="activity-content">
+                                                            {act.activity}
+                                                        </div>
+                                                        <div className="activity-edit">
+                                                            <button
+                                                                className="refine-btn"
+                                                                onClick={() => {
+                                                                    const feedback = prompt(`What would you like to change about this ${act.time} activity?`, act.activity);
+                                                                    if (feedback && feedback !== act.activity) {
+                                                                        handleRefineActivity(dIdx, aIdx, feedback);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <i className="fa-solid fa-pen-to-square"></i> Refine
+                                                            </button>
+                                                        </div>
+                                                        {isRefining && (
+                                                            <div className="card-loader">
+                                                                <i className="fa-solid fa-circle-notch fa-spin"></i> Refining...
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="itinerary-footer-info">
+                                    <div className="info-section">
+                                        <h4><i className="fa-solid fa-truck-ramp-box"></i> Logistics</h4>
+                                        <p>{itinerary.logistics}</p>
+                                    </div>
+                                    <div className="info-section">
+                                        <h4><i className="fa-solid fa-suitcase"></i> Packing Essentials</h4>
+                                        <p>{itinerary.packing}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : outputHtml ? (
+                            <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>
+                        ) : (
+                            <div className="placeholder-state">
+                                <i className="fa-solid fa-map-location-dot"></i>
+                                <p>Enter your trip details to generate a personalized AI travel plan.</p>
+                            </div>
+                        )
+                    )}
+                </div>
+            </main>
         </div>
     );
 };
