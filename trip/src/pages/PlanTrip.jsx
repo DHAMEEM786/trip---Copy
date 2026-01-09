@@ -327,6 +327,7 @@ const PlanTrip = () => {
     };
 
     const generateCalendarEvents = async () => {
+        console.log("!!! TRIGGERING GOOGLE CALENDAR SYNC MODAL !!!");
         if (!rawMarkdown) return;
         setIsExporting(true);
         setLoading(true);
@@ -407,7 +408,7 @@ ${rawMarkdown}
             <aside className="sidebar">
                 <div className="brand">
                     <i className="fa-solid fa-route"></i>
-                    <h1>TN.AI Planner</h1>
+                    <h1>TN.AI Planner <span style={{ fontSize: '0.6rem', background: 'var(--accent-primary)', color: 'white', padding: '2px 6px', borderRadius: '4px', verticalAlign: 'middle' }}>v2.0 - SYNC POPUP</span></h1>
                 </div>
 
                 <div className="controls">
