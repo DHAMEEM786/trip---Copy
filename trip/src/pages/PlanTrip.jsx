@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { usePageTitle, usePageStyle, useScript } from '../hooks';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { useTranslation } from 'react-i18next';
 
 const PlanTrip = () => {
+    const { t } = useTranslation();
     usePageTitle('Tamil Nadu Travel Planner AI');
     usePageStyle('/ai api/style.css'); // Assuming style.css is in public/ai api/
 
@@ -36,6 +40,69 @@ const PlanTrip = () => {
     const [budget, setBudget] = useState('moderate');
     const [placeType, setPlaceType] = useState('mixed');
     const [customPrompt, setCustomPrompt] = useState('');
+
+    const canvasRef = useRef(null);
+
+    // Particle Background System (Reused for consistent look)
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const particleCount = 40;
+        let animationFrameId;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 132, 0, 0.6)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        const initParticles = () => {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+        };
+
+        const animateParticles = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            animationFrameId = requestAnimationFrame(animateParticles);
+        };
+
+        initParticles();
+        animateParticles();
+
+        const handleResize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, []);
 
     const getDaysInRange = (start, end) => {
         const s = new Date(start),
@@ -100,7 +167,7 @@ const PlanTrip = () => {
         setLoading(true);
         setLoadingMsg("Fetching weather data...");
 
-        if (customPrompt) {
+        if (customPrompt && !city) {
             await sendToGemini(customPrompt);
             setLoading(false);
             return;
@@ -151,6 +218,7 @@ const PlanTrip = () => {
             - Category: ${travelType}
             - Budget: ${budget}
             - Interest: ${placeType}
+            ${customPrompt ? `\n**Special Requirements / Wishes:**\n${customPrompt}` : ''}
             
             ${weatherSection}
             
@@ -322,103 +390,155 @@ const PlanTrip = () => {
     };
 
     return (
-        <div className="app-container">
-            <aside className="sidebar">
-                <div className="brand">
-                    <i className="fa-solid fa-route"></i>
-                    <h1>TN.AI Planner <span style={{ fontSize: '0.6rem', background: 'var(--accent-primary)', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>API Sync</span></h1>
-                </div>
-
-                <div className="controls">
-                    <div className="control-group">
-                        <label htmlFor="cityInput"><i className="fa-solid fa-city"></i> Destination</label>
-                        <input type="text" id="cityInput" placeholder="Where do you want to go?" value={city} onChange={(e) => setCity(e.target.value)} />
+        <div style={{ paddingTop: '80px' }}>
+            <Navbar />
+            <canvas ref={canvasRef} id="particleCanvas" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'none' }}></canvas>
+            <div className="app-container">
+                <aside className="sidebar">
+                    <div className="brand">
+                        <i className="fa-solid fa-route"></i>
+                        <h1>TN.AI Planner <span style={{ fontSize: '0.6rem', background: 'var(--accent-primary)', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>API Sync</span></h1>
                     </div>
-                    {outputHtml && (
-                        <div className="control-group replan-section">
-                            <label><i className="fa-solid fa-arrows-rotate"></i> Replan Specific Day</label>
-                            <select value={selectedDayToReplan} onChange={(e) => setSelectedDayToReplan(e.target.value)} style={{ width: '100%', marginBottom: '0.75rem' }}>
-                                {(startDate && endDate) ? getDaysInRange(startDate, endDate).map((_, i) => (
-                                    <option key={i + 1} value={i + 1}>Day {i + 1}</option>
-                                )) : <option value="1">Day 1</option>}
-                            </select>
-                            <textarea placeholder="Tell me what to change..." value={replanFeedback} onChange={(e) => setReplanFeedback(e.target.value)} rows="2"></textarea>
-                            <button onClick={replanDay} className="action-btn" style={{ width: '100%', background: 'var(--accent-soft)', color: 'var(--accent-primary)', justifyContent: 'center' }}>
-                                <i className="fa-solid fa-wand-magic-sparkles"></i> Update Day {selectedDayToReplan}
-                            </button>
-                        </div>
-                    )}
-                    <div className="control-row">
-                        <div className="control-group">
-                            <label htmlFor="startDate">Start</label>
-                            <input type="date" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                        </div>
-                        <div className="control-group">
-                            <label htmlFor="endDate">End</label>
-                            <input type="date" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                        </div>
-                    </div>
-                    {/* Simplified select for brevity */}
-                    <button onClick={generatePlan} className="generate-btn">
-                        <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
-                    </button>
-                </div>
-            </aside>
 
-            <main className="main-content">
-                <div className="result-header">
-                    <h2>Your Itinerary</h2>
-                    <div className="actions" style={{ display: 'flex', gap: '0.75rem' }}>
-                        {showDownload && (
-                            <>
-                                <button onClick={generateCalendarEvents} className="action-btn" style={{ background: 'var(--accent-primary)', color: 'white' }}>
-                                    <i className="fa-solid fa-calendar-plus"></i> Sync to Calendar (Automatic)
+                    <div className="controls">
+                        <div className="control-group">
+                            <label htmlFor="cityInput"><i className="fa-solid fa-earth-asia"></i> {t('plan_trip.dest_city')}</label>
+                            <input type="text" id="cityInput" placeholder={t('plan_trip.placeholder')} value={city} onChange={(e) => setCity(e.target.value)} />
+                        </div>
+                        {outputHtml && (
+                            <div className="control-group replan-section">
+                                <label><i className="fa-solid fa-arrows-rotate"></i> Replan Specific Day</label>
+                                <select value={selectedDayToReplan} onChange={(e) => setSelectedDayToReplan(e.target.value)} style={{ width: '100%', marginBottom: '0.75rem' }}>
+                                    {(startDate && endDate) ? getDaysInRange(startDate, endDate).map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>Day {i + 1}</option>
+                                    )) : <option value="1">Day 1</option>}
+                                </select>
+                                <textarea placeholder="Tell me what to change..." value={replanFeedback} onChange={(e) => setReplanFeedback(e.target.value)} rows="2"></textarea>
+                                <button onClick={replanDay} className="action-btn" style={{ width: '100%', background: 'rgba(255, 132, 0, 0.1)', color: 'var(--accent-primary)', justifyContent: 'center' }}>
+                                    <i className="fa-solid fa-wand-magic-sparkles"></i> Update Day {selectedDayToReplan}
                                 </button>
-                                <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
-                                    <i className="fa-solid fa-file-pdf"></i> PDF
-                                </button>
-                            </>
+                            </div>
                         )}
-                    </div>
-                </div>
-
-                <div id="output" className="output-area">
-                    {loading ? (
-                        <div className="loading">
-                            <i className="fa-solid fa-circle-notch fa-spin"></i>
-                            <p>{loadingMsg}</p>
+                        <div className="control-row">
+                            <div className="control-group">
+                                <label htmlFor="startDate"><i className="fa-regular fa-calendar"></i> {t('plan_trip.start_date')}</label>
+                                <input type="date" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                            </div>
+                            <div className="control-group">
+                                <label htmlFor="endDate"><i className="fa-regular fa-calendar-check"></i> {t('plan_trip.end_date')}</label>
+                                <input type="date" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                            </div>
                         </div>
-                    ) : (
-                        outputHtml ? <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div> : <div className="placeholder-state"><i className="fa-solid fa-map-location-dot"></i><p>Generate your plan to start.</p></div>
-                    )}
-                </div>
-            </main>
 
-            {showSyncModal && (
-                <div className="modal-overlay" onClick={() => setShowSyncModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px', textAlign: 'center' }}>
-                        <div className="modal-header">
-                            <h3><i className="fa-solid fa-cloud-arrow-up"></i> Calendar API Sync</h3>
-                            <button className="close-modal" onClick={() => setShowSyncModal(false)}>&times;</button>
-                        </div>
-                        <div className="sync-status" style={{ padding: '2rem 1rem' }}>
-                            {syncProgress.status === 'idle' ? (
-                                <>
-                                    <h4 style={{ marginBottom: '1rem' }}>Found {calendarEvents.length} events to add</h4>
-                                    <button onClick={authorizeAndSync} className="generate-btn" style={{ width: '100%', margin: 0 }}>
-                                        Authorize & Sync All
+                        <div className="control-group">
+                            <label><i className="fa-solid fa-user-astronaut"></i> {t('plan_trip.traveler_profile')}</label>
+                            <div className="select-grid">
+                                {['solo', 'partner', 'family', 'friends'].map(type => (
+                                    <button key={type} className={`select-btn ${travelType === type ? 'active' : ''}`} onClick={() => setTravelType(type)}>
+                                        <i className={`fa-solid ${type === 'solo' ? 'fa-person' : type === 'partner' ? 'fa-heart' : type === 'family' ? 'fa-users' : 'fa-user-group'}`}></i> {type.charAt(0).toUpperCase() + type.slice(1)}
                                     </button>
-                                </>
-                            ) : (
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="control-group">
+                            <label><i className="fa-solid fa-wallet"></i> {t('plan_trip.budget')}</label>
+                            <div className="select-grid">
+                                {[
+                                    { val: 'cheap', label: 'Budget', icon: '$' },
+                                    { val: 'moderate', label: 'Standard', icon: '$$' },
+                                    { val: 'luxury', label: 'Luxury', icon: '$$$' }
+                                ].map(item => (
+                                    <button key={item.val} className={`select-btn ${budget === item.val ? 'active' : ''}`} onClick={() => setBudget(item.val)}>
+                                        <span>{item.icon}</span> {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="control-group">
+                            <label><i className="fa-solid fa-heart"></i> {t('plan_trip.vibe')}</label>
+                            <div className="select-grid">
+                                {[
+                                    { val: 'mixed', label: 'Mixed' },
+                                    { val: 'adventure', label: 'Adventure' },
+                                    { val: 'waterfall', label: 'Nature' },
+                                    { val: 'temple', label: 'Heritage' }
+                                ].map(item => (
+                                    <button key={item.val} className={`select-btn ${placeType === item.val ? 'active' : ''}`} onClick={() => setPlaceType(item.val)}>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="control-group">
+                            <label htmlFor="customPrompt"><i className="fa-solid fa-comment-dots"></i> {t('plan_trip.special_req')}</label>
+                            <textarea id="customPrompt" rows="3" placeholder="Any specific wishes?" value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)}></textarea>
+                        </div>
+                        {/* Simplified select for brevity */}
+                        <button onClick={generatePlan} className="generate-btn">
+                            <i className="fa-solid fa-wand-magic-sparkles"></i> {t('plan_trip.generate')}
+                        </button>
+                    </div>
+                </aside>
+
+                <main className="main-content">
+                    <div className="result-header">
+                        <h2>Your Itinerary</h2>
+                        <div className="actions" style={{ display: 'flex', gap: '0.75rem' }}>
+                            {showDownload && (
                                 <>
-                                    <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: 'var(--accent-primary)' }}></i>
-                                    <h4 style={{ marginTop: '1rem' }}>{syncProgress.status === 'done' ? 'All Synced!' : `Adding ${syncProgress.current}/${syncProgress.total}...`}</h4>
+                                    <button onClick={generateCalendarEvents} className="action-btn" style={{ background: 'var(--accent-primary)', color: 'white' }}>
+                                        <i className="fa-solid fa-calendar-plus"></i> Sync to Calendar (Automatic)
+                                    </button>
+                                    <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
+                                        <i className="fa-solid fa-file-pdf"></i> PDF
+                                    </button>
                                 </>
                             )}
                         </div>
                     </div>
-                </div>
-            )}
+
+                    <div id="output" className="output-area">
+                        {loading ? (
+                            <div className="loading">
+                                <i className="fa-solid fa-circle-notch fa-spin"></i>
+                                <p>{loadingMsg}</p>
+                            </div>
+                        ) : (
+                            outputHtml ? <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div> : <div className="placeholder-state"><i className="fa-solid fa-map-location-dot"></i><p>Generate your plan to start.</p></div>
+                        )}
+                    </div>
+                </main>
+
+                {showSyncModal && (
+                    <div className="modal-overlay" onClick={() => setShowSyncModal(false)}>
+                        <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px', textAlign: 'center' }}>
+                            <div className="modal-header">
+                                <h3><i className="fa-solid fa-cloud-arrow-up"></i> Calendar API Sync</h3>
+                                <button className="close-modal" onClick={() => setShowSyncModal(false)}>&times;</button>
+                            </div>
+                            <div className="sync-status" style={{ padding: '2rem 1rem' }}>
+                                {syncProgress.status === 'idle' ? (
+                                    <>
+                                        <h4 style={{ marginBottom: '1rem' }}>Found {calendarEvents.length} events to add</h4>
+                                        <button onClick={authorizeAndSync} className="generate-btn" style={{ width: '100%', margin: 0 }}>
+                                            Authorize & Sync All
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: 'var(--accent-primary)' }}></i>
+                                        <h4 style={{ marginTop: '1rem' }}>{syncProgress.status === 'done' ? 'All Synced!' : `Adding ${syncProgress.current}/${syncProgress.total}...`}</h4>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <Footer />
         </div>
     );
 };
