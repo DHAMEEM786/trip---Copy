@@ -21,9 +21,9 @@ const PlanTrip = () => {
     const [showDownload, setShowDownload] = useState(false);
     const [selectedDayToReplan, setSelectedDayToReplan] = useState('1');
     const [replanFeedback, setReplanFeedback] = useState('');
-    const [calendarJson, setCalendarJson] = useState(null);
-    const [showCalendarModal, setShowCalendarModal] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [calendarEvents, setCalendarEvents] = useState([]);
+    const [showSyncModal, setShowSyncModal] = useState(false);
 
     // Form State
     const [city, setCity] = useState('');
@@ -316,45 +316,27 @@ const PlanTrip = () => {
         html2pdf().from(clone).set(opt).save();
     };
 
-    const downloadICS = (events) => {
-        let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//TN.AI Planner//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+    const createGoogleCalendarUrl = (event) => {
+        const start = event.start.dateTime.replace(/[-:]/g, '');
+        const end = event.end.dateTime.replace(/[-:]/g, '');
+        const details = encodeURIComponent(event.description || '');
+        const location = encodeURIComponent(event.location || '');
+        const summary = encodeURIComponent(event.summary || '');
 
-        events.forEach(event => {
-            const start = event.start.dateTime.replace(/[-:]/g, '').split('.')[0];
-            const end = event.end.dateTime.replace(/[-:]/g, '').split('.')[0];
-
-            icsContent += "BEGIN:VEVENT\n";
-            icsContent += `DTSTART:${start}\n`;
-            icsContent += `DTEND:${end}\n`;
-            icsContent += `SUMMARY:${event.summary}\n`;
-            icsContent += `LOCATION:${event.location}\n`;
-            icsContent += `DESCRIPTION:${event.description}\n`;
-            icsContent += "BEGIN:VALARM\nTRIGGER:-PT30M\nACTION:DISPLAY\nDESCRIPTION:Reminder\nEND:VALARM\n";
-            icsContent += "END:VEVENT\n";
-        });
-
-        icsContent += "END:VCALENDAR";
-
-        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.setAttribute('download', `${city || 'Trip'}_Itinerary.ics`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        return `https://www.google.com/calendar/render?action=TEMPLATE&text=${summary}&dates=${start}/${end}&details=${details}&location=${location}&trp=true`;
     };
 
     const generateCalendarEvents = async () => {
         if (!rawMarkdown) return;
         setIsExporting(true);
         setLoading(true);
-        setLoadingMsg("Preparing your calendar file...");
+        setLoadingMsg("Organizing your sync schedule...");
 
         try {
             const prompt = `You are a travel automation agent.
 
 I will give you a travel itinerary in markdown format.
-Your task is to convert it into a list of Google Calendar events.
+Your task is to convert it into a list of events.
 
 ### INPUTS
 - City: ${city}
@@ -364,36 +346,26 @@ Your task is to convert it into a list of Google Calendar events.
 ${rawMarkdown}
 
 ### RULES
-1. Create calendar events ONLY for:
-   - Morning
-   - Lunch
-   - Afternoon
-   - Evening
+1. Create events ONLY for: Morning, Lunch, Afternoon, Evening.
 2. Use realistic Indian travel times:
    - Morning: 09:00 – 11:30
    - Lunch: 13:00 – 14:00
    - Afternoon: 15:00 – 17:30
    - Evening: 18:30 – 20:30
-3. Each event MUST include:
-   - summary
-   - location (place name + ${city})
-   - start.dateTime (format: YYYY-MM-DDTHH:mm:ss)
-   - end.dateTime (format: YYYY-MM-DDTHH:mm:ss)
-   - description (A short note about the activity)
-4. Ensure the date matches the day in the itinerary (e.g., Day 1 is ${startDate}).
-5. Output ONLY valid JSON in this format:
+3. Each event MUST include: summary, location, start.dateTime (YYYY-MM-DDTHH:mm:ss), end.dateTime (YYYY-MM-DDTHH:mm:ss), and description.
+4. Output ONLY valid JSON:
 {
   "events": [
     {
-      "summary": "Morning: Meenakshi Temple",
-      "location": "Meenakshi Amman Temple, Madurai",
-      "description": "Visit the historic temple",
+      "summary": "Meenakshi Temple Visit",
+      "location": "Madurai",
+      "description": "Explore the historic temple",
       "start": { "dateTime": "2026-01-10T09:00:00" },
-      "end": { "dateTime": "2026-01-10T11:30:00" }
+      "end": { "dateTime": "2026-01-10T11:30:00" },
+      "day": 1
     }
   ]
 }
-6. DO NOT add explanations or markdown.
 `;
 
             const res = await fetch("/api/gemini", {
@@ -410,13 +382,14 @@ ${rawMarkdown}
 
             const parsed = JSON.parse(jsonText);
             if (parsed.events && parsed.events.length > 0) {
-                downloadICS(parsed.events);
+                setCalendarEvents(parsed.events);
+                setShowSyncModal(true);
             } else {
-                throw new Error("No events found in the AI response.");
+                throw new Error("No events found.");
             }
         } catch (err) {
-            console.error("Calendar error:", err);
-            alert("Failed to generate calendar events. Please try again.");
+            console.error(err);
+            alert("Failed to organize calendar events.");
         } finally {
             setLoading(false);
             setIsExporting(false);
@@ -621,6 +594,62 @@ ${rawMarkdown}
                 </div>
             </main>
 
+            {showSyncModal && (
+                <div className="modal-overlay" onClick={() => setShowSyncModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%' }}>
+                        <div className="modal-header">
+                            <h3><i className="fa-solid fa-calendar-check"></i> Sync to Google Calendar</h3>
+                            <button className="close-modal" onClick={() => setShowSyncModal(false)}>
+                                &times;
+                            </button>
+                        </div>
+                        <div className="sync-list" style={{ maxHeight: '400px', overflowY: 'auto', padding: '1rem' }}>
+                            {calendarEvents.map((event, idx) => (
+                                <div key={idx} className="sync-item" style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: '1rem',
+                                    background: 'var(--accent-soft)',
+                                    borderRadius: '12px',
+                                    marginBottom: '0.75rem',
+                                    gap: '1rem',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ flex: 1 }}>
+                                        <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{event.summary}</h4>
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                                <i className="fa-solid fa-calendar-day"></i> Day {event.day}
+                                            </span>
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                                <i className="fa-solid fa-clock"></i> {new Date(event.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={createGoogleCalendarUrl(event)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="action-btn"
+                                        style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '0.6rem 1rem', fontSize: '0.85rem', textDecoration: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                    >
+                                        <i className="fa-solid fa-plus"></i> Add
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="modal-actions" style={{ padding: '1.5rem', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                                <i className="fa-solid fa-circle-info"></i> Clicking "Add" will open a Google Calendar window. Click <strong>"Save"</strong> in that window to confirm.
+                            </p>
+                            <button className="action-btn" onClick={() => setShowSyncModal(false)} style={{ width: '100%', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-primary)', border: 'none' }}>
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
