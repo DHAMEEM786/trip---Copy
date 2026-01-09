@@ -177,21 +177,7 @@ const TripHistory = () => {
                             </div>
                         </div>
 
-                        {selectedTrip.imageUrls && selectedTrip.imageUrls.length > 0 && (
-                            <div>
-                                <h3 style={{ marginBottom: '1.5rem' }}>📸 Memories</h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
-                                    {selectedTrip.imageUrls.map((url, idx) => (
-                                        <img key={idx} src={url} alt="Trip" style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '15px' }} />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
-                        <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255, 69, 0, 0.05)', borderRadius: '15px' }}>
-                            <h3 style={{ marginBottom: '0.5rem' }}>📝 Notes</h3>
-                            <p>{selectedTrip.memories || "No specific memories recorded for this trip."}</p>
-                        </div>
                     </div>
                 </section>
             )}

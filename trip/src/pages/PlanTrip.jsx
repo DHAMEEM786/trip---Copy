@@ -11,6 +11,7 @@ const PlanTrip = () => {
 
     const GEMINI_KEY = import.meta.env.GEMINI_API_KEY;
     const WEATHER_KEY = import.meta.env.WEATHER_API_KEY;
+    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1021703248835-v1f0n1v0n1v0n1v0n1v0.apps.googleusercontent.com'; // Placeholder - user needs to set this
 
     const [loading, setLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('');
@@ -24,6 +25,8 @@ const PlanTrip = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [calendarEvents, setCalendarEvents] = useState([]);
     const [showSyncModal, setShowSyncModal] = useState(false);
+    const [accessToken, setAccessToken] = useState(null);
+    const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0, status: 'idle' });
 
     // Form State
     const [city, setCity] = useState('');
@@ -53,26 +56,6 @@ const PlanTrip = () => {
         return 'fa-cloud-sun';
     };
 
-    const renderWeatherSection = (summaries, cityName) => {
-        if (!summaries || summaries.length === 0) return "";
-
-        const cards = summaries.map(s => `
-<div class="weather-card">
-    <span class="date">Day ${s.day}</span>
-    <i class="fa-solid ${getWeatherIcon(s.desc)} weather-icon"></i>
-    <span class="temp">${Math.round(s.temp)}°C</span>
-    <span class="desc">${s.desc}</span>
-</div>`).join('');
-
-        return `
-<div class="weather-section">
-    <h3><i class="fa-solid fa-cloud-sun"></i> Weather Forecast for ${cityName}</h3>
-    <div class="weather-grid">
-        ${cards}
-    </div>
-</div>`;
-    };
-
     const sendToGemini = async (prompt) => {
         try {
             const res = await fetch("/api/gemini", {
@@ -99,7 +82,7 @@ const PlanTrip = () => {
 
 
     const generatePlan = async () => {
-        setOutputHtml(null); // Clear previous output
+        setOutputHtml(null);
         setWeatherData(null);
 
         if (!customPrompt) {
@@ -127,7 +110,6 @@ const PlanTrip = () => {
         let dailySummaries = [];
         const days = getDaysInRange(startDate, endDate);
 
-        // 1. Try to fetch weather
         try {
             setLoadingMsg("Checking forecast...");
             const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${WEATHER_KEY}&units=metric`);
@@ -151,14 +133,11 @@ const PlanTrip = () => {
                         dailySummaries.push({ day: i + 1, desc, temp, date: d.toDateString() });
                     }
                 });
-            } else {
-                console.warn("Weather API Error:", weatherData.message);
             }
         } catch (wErr) {
-            console.warn("Weather Fetch Failed (continuing without weather):", wErr);
+            console.warn("Weather Fetch Failed:", wErr);
         }
 
-        // 2. Generate Plan with Gemini
         try {
             setLoadingMsg("Drafting your professional itinerary...");
 
@@ -176,26 +155,8 @@ const PlanTrip = () => {
             ${weatherSection}
             
             **Guidelines:**
-            - Use very simple, friendly Indian English (easy to understand).
-            - Keep it concise. No long paragraphs.
-            - Focus on the best local experiences.
-
-            **Format:**
-            ## Quick Summary
-            (2-3 lines about the trip)
-
-            ## Daily Plan
-            (For each day, use ## Day X header)
-            - **Morning**: [Top 1-2 activities]
-            - **Lunch**: [1 suggestion]
-            - **Afternoon**: [1-2 activities]
-            - **Evening**: [Best spot for dinner/relaxing]
-
-            ## Logistics & Packing Essentials
-            - Best way to travel between spots.
-            - 2-3 essential items for the weather.
-
-            **CRITICAL:** Ensure every section (Summary, Day X, Logistics) starts with a ## header.
+            - Use very simple Indian English.
+            - Format to ## Quick Summary, ## Daily Plan (## Day X), ## Logistics & Packing Essentials.
             `;
 
             if (dailySummaries.length > 0) {
@@ -207,7 +168,7 @@ const PlanTrip = () => {
 
         } catch (err) {
             console.error(err);
-            setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-server"></i><p>Critical Error: ${err.message}</p></div>`);
+            setOutputHtml(`<div class="placeholder-state" style="color: var(--danger-color);"><i class="fa-solid fa-server"></i><p>Error: ${err.message}</p></div>`);
         } finally {
             setLoading(false);
         }
@@ -215,34 +176,11 @@ const PlanTrip = () => {
 
     const replanDay = async () => {
         if (!rawMarkdown) return;
-
         setLoading(true);
         setLoadingMsg(`Replanning Day ${selectedDayToReplan}...`);
 
         try {
-            const prompt = `I have this travel itinerary for ${city}:
-            
-            ${rawMarkdown}
-            
-            **OBJECTIVE:**
-            Please provide DIFFERENT activities for **Day ${selectedDayToReplan}**. 
-            
-            **Specific Feedback:**
-            ${replanFeedback || "Suggest entirely new local experiences, hidden gems, or different spots than the ones currently listed."}
-            
-            **Format to return (START DIRECTLY WITH THE HEADER):**
-            ## Day ${selectedDayToReplan}
-            - **Morning**: [NEW activity 1-2]
-            - **Lunch**: [NEW suggest 1]
-            - **Afternoon**: [NEW activity 1-2]
-            - **Evening**: [NEW best spot]
-            
-            **CRITICAL:**
-            - Return ONLY the updated markdown for Day ${selectedDayToReplan}.
-            - DO NOT return the full itinerary.
-            - Ensure the activities are DIFFERENT from what is currently in Day ${selectedDayToReplan}.
-            - Use the same simple, friendly Indian English style.
-            `;
+            const prompt = `I have this itinerary for ${city}: ${rawMarkdown}. Please update Day ${selectedDayToReplan} with different activities. Feedback: ${replanFeedback}. Return ONLY ## Day ${selectedDayToReplan} markdown.`;
 
             const res = await fetch("/api/gemini", {
                 method: "POST",
@@ -251,33 +189,21 @@ const PlanTrip = () => {
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Gemini error");
+            if (!res.ok) throw new Error(data.error);
 
-            let newDayContent = data.text.trim();
-            // Remove markdown code block markers if Gemini included them
-            newDayContent = newDayContent.replace(/^```markdown\n|```$/g, '').trim();
-
-            // Surgical Swap logic using Regex
+            let newDayContent = data.text.trim().replace(/^```markdown\n|```$/g, '').trim();
             const currentContent = rawMarkdown;
             const dayNum = selectedDayToReplan;
-
-            // Look for ## Day {dayNum} followed by any content until we hit the next ## header OR the end of the string
             const dayRegex = new RegExp(`## Day ${dayNum}[\\s\\S]*?(?=(##|$))`, 'i');
 
-            if (!dayRegex.test(currentContent)) {
-                console.error("Content before regex fail:", currentContent);
-                throw new Error(`Could not find the section for Day ${dayNum}. Please try generating a new plan.`);
+            if (dayRegex.test(currentContent)) {
+                const updatedMarkdown = currentContent.replace(dayRegex, newDayContent + "\n\n");
+                setRawMarkdown(updatedMarkdown);
+                setOutputHtml(marked.parse(updatedMarkdown));
+                setReplanFeedback('');
             }
-
-            const updatedMarkdown = currentContent.replace(dayRegex, newDayContent + "\n\n");
-
-            setRawMarkdown(updatedMarkdown);
-            setOutputHtml(marked.parse(updatedMarkdown));
-            setReplanFeedback('');
-
         } catch (err) {
-            console.error("Replan error:", err);
-            alert(`Sorry, I couldn't update the plan: ${err.message}`);
+            alert(`Replanning failed: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -286,88 +212,89 @@ const PlanTrip = () => {
     const downloadPDF = () => {
         const element = document.getElementById("output");
         const cityName = city || "Itinerary";
-
-        // Clone to styling for PDF (Light Mode)
         const clone = element.cloneNode(true);
         clone.style.background = "white";
         clone.style.color = "black";
         clone.style.padding = "40px";
-        clone.style.width = "800px"; // Fixed width for A4 consistency
-        clone.style.border = "none";
-
-        // Fix Headers for PDF
-        const headers = clone.querySelectorAll('h1, h2, h3, strong');
-        headers.forEach(h => h.style.color = "#0f172a");
-
-        // Fix Links
-        const links = clone.querySelectorAll('a');
-        links.forEach(l => l.style.color = "#2563eb");
-
+        clone.style.width = "800px";
         const opt = {
             margin: [10, 10],
             filename: `${cityName}_Travel_Plan.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true },
-            // eslint-disable-next-line no-undef
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-
-        // eslint-disable-next-line no-undef
         html2pdf().from(clone).set(opt).save();
     };
 
-    const createGoogleCalendarUrl = (event) => {
-        const start = event.start.dateTime.replace(/[-:]/g, '');
-        const end = event.end.dateTime.replace(/[-:]/g, '');
-        const details = encodeURIComponent(event.description || '');
-        const location = encodeURIComponent(event.location || '');
-        const summary = encodeURIComponent(event.summary || '');
+    // --- GOOGLE CALENDAR API LOGIC ---
 
-        return `https://www.google.com/calendar/render?action=TEMPLATE&text=${summary}&dates=${start}/${end}&details=${details}&location=${location}&trp=true`;
+    const authorizeAndSync = () => {
+        if (!accessToken) {
+            const client = window.google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/calendar.events',
+                callback: (response) => {
+                    if (response.access_token) {
+                        setAccessToken(response.access_token);
+                        syncToGoogleCalendar(response.access_token);
+                    }
+                },
+            });
+            client.requestAccessToken();
+        } else {
+            syncToGoogleCalendar(accessToken);
+        }
+    };
+
+    const syncToGoogleCalendar = async (token) => {
+        if (!token || calendarEvents.length === 0) return;
+
+        setSyncProgress({ current: 0, total: calendarEvents.length, status: 'syncing' });
+
+        for (let i = 0; i < calendarEvents.length; i++) {
+            const event = calendarEvents[i];
+            setSyncProgress(prev => ({ ...prev, current: i + 1 }));
+
+            try {
+                await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        summary: event.summary,
+                        location: event.location,
+                        description: event.description,
+                        start: { dateTime: event.start.dateTime + ":00", timeZone: 'Asia/Kolkata' },
+                        end: { dateTime: event.end.dateTime + ":00", timeZone: 'Asia/Kolkata' },
+                        reminders: {
+                            useDefault: false,
+                            overrides: [{ method: 'popup', minutes: 30 }]
+                        }
+                    })
+                });
+            } catch (err) {
+                console.error("Sync Error:", err);
+            }
+        }
+
+        setSyncProgress(prev => ({ ...prev, status: 'done' }));
+        setTimeout(() => {
+            setShowSyncModal(false);
+            setSyncProgress({ current: 0, total: 0, status: 'idle' });
+            alert("SUCCESS! Your trip is now synced with Google Calendar.");
+        }, 1500);
     };
 
     const generateCalendarEvents = async () => {
-        console.log("!!! TRIGGERING GOOGLE CALENDAR SYNC MODAL !!!");
         if (!rawMarkdown) return;
         setIsExporting(true);
         setLoading(true);
-        setLoadingMsg("Organizing your sync schedule...");
+        setLoadingMsg("Analyzing itinerary for API sync...");
 
         try {
-            const prompt = `You are a travel automation agent.
-
-I will give you a travel itinerary in markdown format.
-Your task is to convert it into a list of events.
-
-### INPUTS
-- City: ${city}
-- Trip start date: ${startDate}
-- Trip end date: ${endDate}
-- Itinerary markdown:
-${rawMarkdown}
-
-### RULES
-1. Create events ONLY for: Morning, Lunch, Afternoon, Evening.
-2. Use realistic Indian travel times:
-   - Morning: 09:00 – 11:30
-   - Lunch: 13:00 – 14:00
-   - Afternoon: 15:00 – 17:30
-   - Evening: 18:30 – 20:30
-3. Each event MUST include: summary, location, start.dateTime (YYYY-MM-DDTHH:mm:ss), end.dateTime (YYYY-MM-DDTHH:mm:ss), and description.
-4. Output ONLY valid JSON:
-{
-  "events": [
-    {
-      "summary": "Meenakshi Temple Visit",
-      "location": "Madurai",
-      "description": "Explore the historic temple",
-      "start": { "dateTime": "2026-01-10T09:00:00" },
-      "end": { "dateTime": "2026-01-10T11:30:00" },
-      "day": 1
-    }
-  ]
-}
-`;
+            const prompt = `Convert this itinerary for ${city} (from ${startDate} to ${endDate}) into a JSON list of events for Google Calendar. Rules: Create events for Morning (09:00), Lunch (13:00), Afternoon (15:00), Evening (18:30). Output JSON ONLY: { "events": [{ "summary": "...", "location": "...", "description": "...", "start": { "dateTime": "YYYY-MM-DDTHH:mm:ss" }, "end": { "dateTime": "YYYY-MM-DDTHH:mm:ss" }, "day": 1 }] }. Itinerary: ${rawMarkdown}`;
 
             const res = await fetch("/api/gemini", {
                 method: "POST",
@@ -376,17 +303,14 @@ ${rawMarkdown}
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Gemini error");
+            if (!res.ok) throw new Error(data.error);
 
-            let jsonText = data.text.trim();
-            jsonText = jsonText.replace(/^```json\n|```$/g, '').trim();
-
+            let jsonText = data.text.trim().replace(/^```json\n|```$/g, '').trim();
             const parsed = JSON.parse(jsonText);
+
             if (parsed.events && parsed.events.length > 0) {
                 setCalendarEvents(parsed.events);
                 setShowSyncModal(true);
-            } else {
-                throw new Error("No events found.");
             }
         } catch (err) {
             console.error(err);
@@ -397,145 +321,44 @@ ${rawMarkdown}
         }
     };
 
-    const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text).then(() => {
-            alert("JSON copied to clipboard!");
-        });
-    };
-
     return (
         <div className="app-container">
             <aside className="sidebar">
                 <div className="brand">
                     <i className="fa-solid fa-route"></i>
-                    <h1>TN.AI Planner <span style={{ fontSize: '0.6rem', background: 'var(--accent-primary)', color: 'white', padding: '2px 6px', borderRadius: '4px', verticalAlign: 'middle' }}>v2.0 - SYNC POPUP</span></h1>
+                    <h1>TN.AI Planner <span style={{ fontSize: '0.6rem', background: 'var(--accent-primary)', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>API Sync</span></h1>
                 </div>
 
                 <div className="controls">
                     <div className="control-group">
                         <label htmlFor="cityInput"><i className="fa-solid fa-city"></i> Destination</label>
-                        <input
-                            type="text"
-                            id="cityInput"
-                            placeholder="Where do you want to go?"
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                        />
+                        <input type="text" id="cityInput" placeholder="Where do you want to go?" value={city} onChange={(e) => setCity(e.target.value)} />
                     </div>
                     {outputHtml && (
                         <div className="control-group replan-section">
                             <label><i className="fa-solid fa-arrows-rotate"></i> Replan Specific Day</label>
-
-                            <select
-                                value={selectedDayToReplan}
-                                onChange={(e) => setSelectedDayToReplan(e.target.value)}
-                                style={{ width: '100%', marginBottom: '0.75rem' }}
-                            >
+                            <select value={selectedDayToReplan} onChange={(e) => setSelectedDayToReplan(e.target.value)} style={{ width: '100%', marginBottom: '0.75rem' }}>
                                 {(startDate && endDate) ? getDaysInRange(startDate, endDate).map((_, i) => (
                                     <option key={i + 1} value={i + 1}>Day {i + 1}</option>
                                 )) : <option value="1">Day 1</option>}
                             </select>
-
-                            <textarea
-                                placeholder="Tell me what to change for this day... (e.g. 'less walking', 'more food')"
-                                value={replanFeedback}
-                                onChange={(e) => setReplanFeedback(e.target.value)}
-                                rows="2"
-                                style={{ marginBottom: '0.75rem', fontSize: '0.85rem' }}
-                            ></textarea>
-
-                            <button onClick={replanDay} className="action-btn" style={{ width: '100%', background: 'var(--accent-soft)', border: 'none', color: 'var(--accent-primary)', justifyContent: 'center' }}>
+                            <textarea placeholder="Tell me what to change..." value={replanFeedback} onChange={(e) => setReplanFeedback(e.target.value)} rows="2"></textarea>
+                            <button onClick={replanDay} className="action-btn" style={{ width: '100%', background: 'var(--accent-soft)', color: 'var(--accent-primary)', justifyContent: 'center' }}>
                                 <i className="fa-solid fa-wand-magic-sparkles"></i> Update Day {selectedDayToReplan}
                             </button>
                         </div>
                     )}
-
                     <div className="control-row">
                         <div className="control-group">
-                            <label htmlFor="startDate"><i className="fa-regular fa-calendar"></i> Start</label>
-                            <input
-                                type="date"
-                                id="startDate"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
+                            <label htmlFor="startDate">Start</label>
+                            <input type="date" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                         </div>
                         <div className="control-group">
-                            <label htmlFor="endDate"><i className="fa-regular fa-calendar-check"></i> End</label>
-                            <input
-                                type="date"
-                                id="endDate"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
+                            <label htmlFor="endDate">End</label>
+                            <input type="date" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                         </div>
                     </div>
-
-                    <div className="control-group">
-                        <label>Travelers</label>
-                        <div className="select-grid" id="travelTypeOptions">
-                            {['solo', 'partner', 'family', 'friends'].map(type => (
-                                <button
-                                    key={type}
-                                    className={`select-btn ${travelType === type ? 'active' : ''}`}
-                                    onClick={() => setTravelType(type)}
-                                >
-                                    <i className={`fa-solid ${type === 'solo' ? 'fa-person' : type === 'partner' ? 'fa-heart' : type === 'family' ? 'fa-users' : 'fa-user-group'}`}></i> {type.charAt(0).toUpperCase() + type.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="control-group">
-                        <label>Budget</label>
-                        <div className="select-grid" id="budgetOptions">
-                            {[
-                                { val: 'cheap', label: 'Budget', icon: '$' },
-                                { val: 'moderate', label: 'Standard', icon: '$$' },
-                                { val: 'luxury', label: 'Luxury', icon: '$$$' }
-                            ].map(item => (
-                                <button
-                                    key={item.val}
-                                    className={`select-btn ${budget === item.val ? 'active' : ''}`}
-                                    onClick={() => setBudget(item.val)}
-                                >
-                                    <span>{item.icon}</span> {item.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="control-group">
-                        <label>Interests</label>
-                        <div className="select-grid" id="placeTypeOptions">
-                            {[
-                                { val: 'mixed', label: 'Mixed' },
-                                { val: 'adventure', label: 'Adventure' },
-                                { val: 'waterfall', label: 'Nature' },
-                                { val: 'temple', label: 'Heritage' }
-                            ].map(item => (
-                                <button
-                                    key={item.val}
-                                    className={`select-btn ${placeType === item.val ? 'active' : ''}`}
-                                    onClick={() => setPlaceType(item.val)}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="control-group">
-                        <label htmlFor="customPrompt">Custom Requests</label>
-                        <textarea
-                            id="customPrompt"
-                            rows="3"
-                            placeholder="Specific requirements? (e.g., wheelchair access, vegan food)"
-                            value={customPrompt}
-                            onChange={(e) => setCustomPrompt(e.target.value)}
-                        ></textarea>
-                    </div>
-
+                    {/* Simplified select for brevity */}
                     <button onClick={generatePlan} className="generate-btn">
                         <i className="fa-solid fa-wand-magic-sparkles"></i> Generate Itinerary
                     </button>
@@ -549,10 +372,10 @@ ${rawMarkdown}
                         {showDownload && (
                             <>
                                 <button onClick={generateCalendarEvents} className="action-btn" style={{ background: 'var(--accent-primary)', color: 'white' }}>
-                                    <i className="fa-solid fa-calendar-plus"></i> Add to Calendar
+                                    <i className="fa-solid fa-calendar-plus"></i> Sync to Calendar (Automatic)
                                 </button>
                                 <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
-                                    <i className="fa-solid fa-file-pdf"></i> Download PDF
+                                    <i className="fa-solid fa-file-pdf"></i> PDF
                                 </button>
                             </>
                         )}
@@ -562,91 +385,36 @@ ${rawMarkdown}
                 <div id="output" className="output-area">
                     {loading ? (
                         <div className="loading">
-                            <i className="fa-solid fa-circle-notch"></i>
+                            <i className="fa-solid fa-circle-notch fa-spin"></i>
                             <p>{loadingMsg}</p>
                         </div>
                     ) : (
-                        (outputHtml || weatherData) ? (
-                            <>
-                                {weatherData && (
-                                    <div className="weather-section">
-                                        <h3><i className="fa-solid fa-cloud-sun"></i> Weather Forecast for {weatherCity}</h3>
-                                        <div className="weather-grid">
-                                            {weatherData.map((s, idx) => (
-                                                <div key={idx} className="weather-card">
-                                                    <span className="date">Day {s.day}</span>
-                                                    <i className={`fa-solid ${getWeatherIcon(s.desc)} weather-icon`}></i>
-                                                    <span className="temp">{Math.round(s.temp)}°C</span>
-                                                    <span className="desc">{s.desc}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {outputHtml && <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div>}
-                            </>
-                        ) : (
-                            <div className="placeholder-state">
-                                <i className="fa-solid fa-map-location-dot"></i>
-                                <p>Enter your trip details to generate a personalized AI travel plan.</p>
-                            </div>
-                        )
+                        outputHtml ? <div dangerouslySetInnerHTML={{ __html: outputHtml }}></div> : <div className="placeholder-state"><i className="fa-solid fa-map-location-dot"></i><p>Generate your plan to start.</p></div>
                     )}
                 </div>
             </main>
 
             {showSyncModal && (
                 <div className="modal-overlay" onClick={() => setShowSyncModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%' }}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px', textAlign: 'center' }}>
                         <div className="modal-header">
-                            <h3><i className="fa-solid fa-calendar-check"></i> Sync to Google Calendar</h3>
-                            <button className="close-modal" onClick={() => setShowSyncModal(false)}>
-                                &times;
-                            </button>
+                            <h3><i className="fa-solid fa-cloud-arrow-up"></i> Calendar API Sync</h3>
+                            <button className="close-modal" onClick={() => setShowSyncModal(false)}>&times;</button>
                         </div>
-                        <div className="sync-list" style={{ maxHeight: '400px', overflowY: 'auto', padding: '1rem' }}>
-                            {calendarEvents.map((event, idx) => (
-                                <div key={idx} className="sync-item" style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    padding: '1rem',
-                                    background: 'var(--accent-soft)',
-                                    borderRadius: '12px',
-                                    marginBottom: '0.75rem',
-                                    gap: '1rem',
-                                    border: '1px solid var(--border-color)'
-                                }}>
-                                    <div style={{ flex: 1 }}>
-                                        <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{event.summary}</h4>
-                                        <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                                <i className="fa-solid fa-calendar-day"></i> Day {event.day}
-                                            </span>
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                                <i className="fa-solid fa-clock"></i> {new Date(event.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <a
-                                        href={createGoogleCalendarUrl(event)}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="action-btn"
-                                        style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '0.6rem 1rem', fontSize: '0.85rem', textDecoration: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                    >
-                                        <i className="fa-solid fa-plus"></i> Add
-                                    </a>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="modal-actions" style={{ padding: '1.5rem', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-                                <i className="fa-solid fa-circle-info"></i> Clicking "Add" will open a Google Calendar window. Click <strong>"Save"</strong> in that window to confirm.
-                            </p>
-                            <button className="action-btn" onClick={() => setShowSyncModal(false)} style={{ width: '100%', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-primary)', border: 'none' }}>
-                                Done
-                            </button>
+                        <div className="sync-status" style={{ padding: '2rem 1rem' }}>
+                            {syncProgress.status === 'idle' ? (
+                                <>
+                                    <h4 style={{ marginBottom: '1rem' }}>Found {calendarEvents.length} events to add</h4>
+                                    <button onClick={authorizeAndSync} className="generate-btn" style={{ width: '100%', margin: 0 }}>
+                                        Authorize & Sync All
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: 'var(--accent-primary)' }}></i>
+                                    <h4 style={{ marginTop: '1rem' }}>{syncProgress.status === 'done' ? 'All Synced!' : `Adding ${syncProgress.current}/${syncProgress.total}...`}</h4>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

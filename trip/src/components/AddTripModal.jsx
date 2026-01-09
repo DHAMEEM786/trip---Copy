@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { db, auth, storage } from '../firebase';
+import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AddTripModal = ({ onClose, onTripAdded, tripToEdit = null }) => {
     const [formData, setFormData] = useState(tripToEdit ? {
@@ -16,7 +15,6 @@ const AddTripModal = ({ onClose, onTripAdded, tripToEdit = null }) => {
         transportExpense: 0,
         adventureExpense: 0,
         othersExpense: 0,
-        memories: '',
         startPlace: '',
         endPlace: '',
         placesVisited: '',
@@ -25,7 +23,6 @@ const AddTripModal = ({ onClose, onTripAdded, tripToEdit = null }) => {
     });
 
     const [timeline, setTimeline] = useState(tripToEdit?.timeline || [{ day: 1, location: '', activity: '', expense: 0 }]);
-    const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -49,9 +46,6 @@ const AddTripModal = ({ onClose, onTripAdded, tripToEdit = null }) => {
         setTimeline([...timeline, { day: lastDay + 1, location: '', activity: '', expense: 0 }]);
     };
 
-    const handleImageChange = (e) => {
-        setImages([...e.target.files]);
-    };
 
     const getDestinationImage = (dest) => {
         const search = dest?.toLowerCase() || '';
@@ -90,15 +84,6 @@ const AddTripModal = ({ onClose, onTripAdded, tripToEdit = null }) => {
             if (!user) throw new Error("No user logged in");
 
             let imageUrls = tripToEdit?.imageUrls || [];
-            if (images.length > 0) {
-                // If new images are uploaded, append them
-                for (const image of images) {
-                    const storageRef = ref(storage, `trips/${user.uid}/${Date.now()}_${image.name}`);
-                    await uploadBytes(storageRef, image);
-                    const url = await getDownloadURL(storageRef);
-                    imageUrls.push(url);
-                }
-            }
 
             // Calculate Actual Expenditure from Breakdown fields + Timeline (if used)
             // Prioritize Breakdown fields if they are used, otherwise fallback to timeline or sum both?
@@ -263,13 +248,6 @@ const AddTripModal = ({ onClose, onTripAdded, tripToEdit = null }) => {
                         </div>
                     </section>
 
-                    <section className="modal-form-section">
-                        <h3>📸 Memories & Media</h3>
-                        <div className="form-row">
-                            <div className="form-group" style={{ flex: 2 }}><label>Memories / Notes</label><textarea name="memories" value={formData.memories} onChange={handleChange} placeholder="The sunset was magical..." rows="2" /></div>
-                            <div className="form-group" style={{ flex: 1 }}><label>Upload Photos</label><input type="file" multiple accept="image/*" onChange={handleImageChange} className="file-input" /></div>
-                        </div>
-                    </section>
 
                     <div className="modal-actions">
                         <button type="button" onClick={onClose} className="btn-cancel">Cancel</button>
