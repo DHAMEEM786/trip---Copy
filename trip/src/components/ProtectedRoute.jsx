@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children }) => {
     }
 
     if (!user) {
-        return <Navigate to="/login" replace state={{ from: window.location.pathname }} />;
+        return <Navigate to="/login" replace />;
     }
 
     return children;

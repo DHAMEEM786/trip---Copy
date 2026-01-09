@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -11,13 +11,11 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const location = useLocation();
-    const from = location.state?.from || '/home';
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                navigate(from, { replace: true });
+                navigate('/home');
             }
         });
         return () => unsubscribe();
@@ -49,7 +47,7 @@ const Login = () => {
 
             // 2. Sign in with email and password
             await signInWithEmailAndPassword(auth, email, password);
-            navigate(from, { replace: true });
+            navigate('/home');
         } catch (err) {
             setError('Invalid credentials');
         } finally {
