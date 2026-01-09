@@ -378,19 +378,33 @@ ${rawMarkdown}
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Gemini error");
 
-            let jsonText = data.text.trim();
-            jsonText = jsonText.replace(/^```json\n|```$/g, '').trim();
+            console.log("RAW AI RESPONSE FOR CALENDAR:", data.text);
 
-            const parsed = JSON.parse(jsonText);
-            if (parsed.events && parsed.events.length > 0) {
-                setCalendarEvents(parsed.events);
-                setShowSyncModal(true);
-            } else {
-                throw new Error("No events found.");
+            let jsonText = data.text.trim();
+            // Robust extraction: find content between first { and last }
+            const firstBrace = jsonText.indexOf('{');
+            const lastBrace = jsonText.lastIndexOf('}');
+
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                jsonText = jsonText.substring(firstBrace, lastBrace + 1);
+            }
+
+            try {
+                const parsed = JSON.parse(jsonText);
+                if (parsed.events && parsed.events.length > 0) {
+                    setCalendarEvents(parsed.events);
+                    setShowSyncModal(true);
+                } else {
+                    console.error("No events in parsed JSON:", parsed);
+                    throw new Error("No events found in the itinerary.");
+                }
+            } catch (parseErr) {
+                console.error("JSON Parse Error. Cleaned text:", jsonText);
+                throw new Error("Could not understand the calendar data format from AI.");
             }
         } catch (err) {
-            console.error(err);
-            alert("Failed to organize calendar events.");
+            console.error("CALENDAR GENERATION FAILED:", err);
+            alert(`Failed to organize calendar events: ${err.message}`);
         } finally {
             setLoading(false);
             setIsExporting(false);
