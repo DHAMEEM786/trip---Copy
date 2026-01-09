@@ -345,6 +345,7 @@ const PlanTrip = () => {
     };
 
     const generateCalendarEvents = async () => {
+        console.log("--- STARTING CALENDAR EVENT GENERATION (ICS VERSION) ---");
         if (!rawMarkdown) return;
         setIsExporting(true);
         setLoading(true);
@@ -574,8 +575,8 @@ ${rawMarkdown}
                     <div className="actions" style={{ display: 'flex', gap: '0.75rem' }}>
                         {showDownload && (
                             <>
-                                <button onClick={generateCalendarEvents} className="action-btn" style={{ background: 'var(--accent-primary)', color: 'white' }}>
-                                    <i className="fa-solid fa-calendar-plus"></i> Add to Calendar
+                                <button onClick={generateCalendarEvents} className="action-btn" style={{ background: '#ff4444', color: 'white' }}>
+                                    <i className="fa-solid fa-calendar-plus"></i> Add to Calendar (NEW)
                                 </button>
                                 <button id="downloadBtn" onClick={downloadPDF} className="action-btn">
                                     <i className="fa-solid fa-file-pdf"></i> Download PDF
