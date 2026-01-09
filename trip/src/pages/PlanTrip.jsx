@@ -345,7 +345,6 @@ const PlanTrip = () => {
     };
 
     const generateCalendarEvents = async () => {
-        console.log("--- STARTING CALENDAR EVENT GENERATION (ICS VERSION) ---");
         if (!rawMarkdown) return;
         setIsExporting(true);
         setLoading(true);
